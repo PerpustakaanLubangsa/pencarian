@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pencarian Koleksi Buku (Modern & Bersih)</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        /* [STYLES SAMA SEPERTI VERSI SEBELUMNYA UNTUK KONSISTENSI] */
+        :root {
+            --color-primary: #3F51B5; 
+            --color-primary-dark: #303F9F; 
+            --color-text: #263238;    
+            --color-text-light: #546E7A; 
+            --color-background: #eceff1; 
+            --color-card-bg: #ffffff;
+            --color-border: #cfd8dc; 
+            --color-shadow: rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 900px; 
+            background-color: var(--color-card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px var(--color-shadow);
+            padding: 40px;
+        }
+
+        h2 {
+            color: var(--color-primary-dark);
+            font-weight: 500;
+            margin-top: 0;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.8em;
+        }
+        
+        #searchBar {
+            display: flex;
+            margin-bottom: 30px;
+        }
+
+        #searchInput {
+            flex-grow: 1;
+            padding: 16px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 1.1em;
+            transition: all 0.2s ease-in-out;
+        }
+
+        #searchInput:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.2);
+            outline: none;
+        }
+
+        .book-item {
+            background-color: var(--color-card-bg);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center; 
+            gap: 25px;
+            border: 1px solid var(--color-border); 
+        }
+
+        .book-item:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px); 
+            border-color: var(--color-primary);
+        }
+
+        .book-cover {
+            width: 55px; 
+            height: 80px; 
+            border-radius: 3px;
+            background: linear-gradient(to bottom, var(--color-primary), var(--color-primary-dark));
+            box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2); 
+            flex-shrink: 0; 
+            position: relative;
+        }
+
+        .book-cover::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 5px;
+            width: 2px;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 1px;
+        }
+
+        .book-info { 
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column; 
+        }
+        
+        .book-info h3 {
+            color: var(--color-text); 
+            margin: 0 0 5px 0;
+            font-size: 1.25em;
+            font-weight: 600;
+        }
+
+        .book-info .author-text {
+            color: var(--color-text-light); 
+            margin: 0 0 10px 0;
+            font-style: italic;
+            font-size: 0.95em;
+        }
+
+        .book-info .location-bar {
+            margin-top: 5px;
+            font-size: 0.9em; 
+            color: var(--color-text-light);
+            border-top: 1px dashed var(--color-border);
+            padding-top: 8px;
+            display: flex; 
+            gap: 20px;
+        }
+        
+        .location-bar .loc-data {
+            font-weight: 600;
+            color: var(--color-primary-dark);
+            background-color: #e8eaf6; 
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .location-bar .copy-data {
+            color: var(--color-text);
+            font-weight: 500;
+        }
+
+        .message { 
+            margin-top: 20px; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-weight: 500;
+        }
+        .info { background-color: #e8eaf6; color: var(--color-primary-dark); border-left: 5px solid var(--color-primary); }
+    </style>
+</head>
+<body>
+
+    <div class="search-container">
+        <h2>Pencarian Koleksi Buku Digital</h2>
+
+        <div id="searchBar">
+            <input type="text" id="searchInput" placeholder="Ketik Judul atau Pengarang untuk Pencarian Instan" onkeyup="window.handleSearch()">
+        </div>
+        
+        <div id="results">
+            <p class="info" id="initialMessage">⏳ Mempersiapkan data...</p>
+        </div>
+        
+        </div>
+
+    <script>
+        let allBooks = []; 
+        const CACHE_KEY = 'library_books_cache';
+        const initialMessageElement = document.getElementById('initialMessage');
+        
+        // ----------------------------------------------------------------------
+        // A. FIREBASE CONFIGURATION & INITIALIZATION (v8 KLASIK)
+        // ----------------------------------------------------------------------
+        const firebaseConfig = {
+            // GANTI DENGAN KUNCI ANDA YANG ASLI!
+            apiKey: "AIzaSyC9flInCggKcfWril97oSKGRQoHIr-UAXU", 
+            authDomain: "databuku-2c3eb.firebaseapp.com",
+            databaseURL: "https://databuku-2c3eb-default-rtdb.firebaseio.com",
+            projectId: "databuku-2c3eb",
+            storageBucket: "databuku-2c3eb.firebasestorage.app",
+            messagingSenderId: "875386002451",
+            appId: "1:875386002451:web:cdf49ba64e5246e47773e6"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const booksRef = database.ref('books'); 
+
+
+        // ----------------------------------------------------------------------
+        // B. FUNGSI UTILITAS UI
+        // ----------------------------------------------------------------------
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            element.textContent = message;
+            element.className = 'message ' + type;
+            element.style.display = 'block'; 
+        }
+
+        function clearInitialMessage() {
+            if (initialMessageElement) {
+                initialMessageElement.remove();
+            }
+        }
+        
+        // ----------------------------------------------------------------------
+        // C. LOGIKA CACHE & LOAD DATA (Dibersihkan)
+        // ----------------------------------------------------------------------
+
+        function processBooksData(snapshot) {
+            const books = [];
+            if (snapshot.exists()) {
+                snapshot.forEach((childSnapshot) => {
+                    const book = childSnapshot.val();
+                    books.push({
+                        id: childSnapshot.key,
+                        title: book.title || '',
+                        author: book.author || '',
+                        title_lower: (book.title || '').toLowerCase(),
+                        author_lower: (book.author || '').toLowerCase(),
+                        block: book.block || '-',
+                        shelf: book.shelf || '-',
+                        copy: book.copy || '-'
+                    });
+                });
+            }
+            return books;
+        }
+
+        /**
+         * Mengambil data buku dari Firebase dan menyimpannya ke LocalStorage (Silent Update).
+         */
+        async function loadAndCacheBooks() {
+            // Ubah pesan loading sementara menjadi latar belakang
+            if (allBooks.length > 0) {
+                 // Tidak ada pesan saat memperbarui cache di latar belakang
+            } else if (initialMessageElement) {
+                initialMessageElement.textContent = '⏳ Memuat data dari Firebase...';
+            }
+
+            try {
+                const snapshot = await booksRef.once('value');
+                const newBooks = processBooksData(snapshot);
+                
+                // Simpan ke LocalStorage dan update data global
+                localStorage.setItem(CACHE_KEY, JSON.stringify(newBooks));
+                allBooks = newBooks;
+                
+                // Hapus pesan loading dan refresh hasil
+                clearInitialMessage();
+                handleSearch(true); 
+
+            } catch (error) {
+                console.error("Gagal memuat data buku dari Firebase:", error);
+                // Biarkan cache lama tetap ada jika ada, jangan tampilkan pesan error yang mengganggu
+            }
+        }
+        
+        /**
+         * Memuat data buku dari LocalStorage jika tersedia (Instan).
+         */
+        function loadBooksFromCache() {
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            
+            if (cachedData) {
+                try {
+                    allBooks = JSON.parse(cachedData);
+                    
+                    // Langsung hapus pesan loading, siap untuk pencarian instan
+                    clearInitialMessage();
+                    
+                    // Mulai pencarian data terbaru dari Firebase di latar belakang
+                    loadAndCacheBooks(); 
+                    return true;
+                } catch (e) {
+                    console.error("Cache rusak. Memuat data baru.", e);
+                    localStorage.removeItem(CACHE_KEY);
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        // ----------------------------------------------------------------------
+        // D. FUNGSI PENCARIAN & DISPLAY
+        // ----------------------------------------------------------------------
+        
+        function searchBooks(searchText) {
+            const searchTextLower = searchText.toLowerCase().trim();
+            if (searchTextLower.length === 0) return [];
+            
+            return allBooks.filter(book => {
+                const titleMatch = book.title_lower.includes(searchTextLower);
+                const authorMatch = book.author_lower.includes(searchTextLower);
+                
+                return titleMatch || authorMatch;
+            });
+        }
+
+        function displayResults(books) {
+            const resultsDiv = document.getElementById('results');
+            if (!resultsDiv) return;
+            
+            resultsDiv.innerHTML = '';
+            const searchInput = document.getElementById('searchInput');
+            const searchText = searchInput ? searchInput.value.trim() : '';
+
+            // Jika data belum termuat, jangan tampilkan pesan error, cukup tunggu
+            if (allBooks.length === 0) {
+                 showMessage('results', 'Menunggu data dimuat...', 'info');
+                 return;
+            }
+
+            if (searchText.length > 0 && books.length === 0) {
+                showMessage('results', `Maaf, tidak ada buku yang cocok dengan "${searchText}".`, 'info');
+                return;
+            } else if (searchText.length === 0) {
+                // Pesan default yang bersih saat kotak pencarian kosong
+                showMessage('results', `Masukkan Judul atau Pengarang untuk memulai pencarian di ${allBooks.length} buku.`, 'info');
+                return;
+            }
+
+            // Memasukkan hasil ke DOM
+            books.forEach(book => {
+                const item = document.createElement('div');
+                item.className = 'book-item';
+                
+                const bookLocation = `${book.block || '-'} ${book.shelf || '-'}`;
+                
+                item.innerHTML = `
+                    <div class="book-cover"></div>
+                    <div class="book-info">
+                        <h3>${book.title || 'Judul Kosong'}</h3>
+                        <p class="author-text">Oleh: ${book.author || 'Tidak Diketahui'}</p>
+                        <div class="location-bar">
+                            <span class="loc-data">Blok: ${bookLocation}</span>
+                            <span class="copy-data">Eksemplar: ${book.copy || '-'}</span>
+                        </div>
+                    </div>
+                `;
+                resultsDiv.appendChild(item);
+            });
+        }
+        
+        let searchTimeout;
+        window.handleSearch = function(forceRun = false) {
+            clearTimeout(searchTimeout);
+            const searchInput = document.getElementById('searchInput');
+            const searchText = searchInput ? searchInput.value.trim() : '';
+            
+            const runSearch = () => {
+                const books = searchBooks(searchText);
+                displayResults(books);
+            };
+
+            if (forceRun) {
+                runSearch();
+            } else {
+                searchTimeout = setTimeout(runSearch, 50); 
+            }
+        }
+
+        // ----------------------------------------------------------------------
+        // E. STARTUP LOGIC
+        // ----------------------------------------------------------------------
+        
+        window.addEventListener('load', () => {
+            const loadedFromCache = loadBooksFromCache();
+            
+            if (!loadedFromCache) {
+                // Jika tidak ada cache, tampilkan pesan loading yang lebih jelas
+                if (initialMessageElement) {
+                    initialMessageElement.textContent = '⏳ Tidak ada data tersimpan. Memuat data pertama kali (mungkin butuh waktu sebentar)...';
+                }
+                loadAndCacheBooks();
+            }
+        });
+
+    </script>
+</body>
+</html>

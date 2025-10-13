@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Perpustakaan Modern | Administrasi Buku</title>
+    
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        /* [STYLES SAMA SEPERTI SEBELUMNYA, DILOMPAT UNTUK KEJELASAN KODE] */
+        :root {
+            --color-primary: #00BCD4; 
+            --color-primary-dark: #00ACC1; 
+            --color-text: #333;
+            --color-background: #f4f7f9; 
+            --color-card-bg: #ffffff;
+            --color-success: #4CAF50;
+            --color-error: #F44336;
+            --color-border: #eee;
+            --color-warning: #FF9800; 
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1000px;
+            background-color: var(--color-card-bg);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab-nav { display: flex; border-bottom: 2px solid var(--color-border); padding: 0 20px; }
+        .tab-button { padding: 15px 25px; cursor: pointer; font-size: 1.1em; font-weight: 600; color: #666; border: none; background: none; border-bottom: 3px solid transparent; transition: all 0.3s ease; }
+        .tab-button.active { color: var(--color-primary); border-bottom: 3px solid var(--color-primary); }
+
+        .tab-content { padding: 30px; min-height: 500px; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        h2 { color: var(--color-primary-dark); font-weight: 400; margin-top: 0; padding-bottom: 10px; border-bottom: 1px solid var(--color-border); margin-bottom: 25px; }
+        
+        #searchContainer { display: flex; gap: 15px; margin-bottom: 25px; align-items: center; }
+        #searchInput { flex-grow: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; transition: border-color 0.3s; }
+        #searchInput:focus { border-color: var(--color-primary); outline: none; }
+
+        .book-item { background-color: #f7f7f7; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid var(--color-primary); box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); display: flex; justify-content: space-between; align-items: center; }
+        .book-info { flex-grow: 1; }
+        .book-item h3 { color: var(--color-primary-dark); margin: 0 0 5px 0; }
+        .delete-single-btn { background-color: var(--color-error); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; margin-left: 15px; font-weight: 600; transition: background-color 0.3s; }
+        .delete-single-btn:hover { background-color: #D32F2F; }
+
+        .form-section { background-color: var(--color-background); padding: 25px; border-radius: 10px; margin-bottom: 30px; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05); }
+        input:not([type="submit"]):not([type="button"]):not([type="file"]), select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; transition: border-color 0.3s; }
+        
+        button.action-btn { width: 100%; padding: 12px; margin-top: 25px; background-color: var(--color-primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; font-weight: 600; transition: background-color 0.3s, box-shadow 0.3s; }
+        button.action-btn:hover { background-color: var(--color-primary-dark); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); }
+        
+        .message { margin-top: 20px; padding: 15px; border-radius: 6px; font-weight: 600; display: none; opacity: 0; transition: opacity 0.5s ease; }
+        .message.show { opacity: 1; }
+        .success { background-color: #e8f5e9; color: var(--color-success); border-left: 5px solid var(--color-success); }
+        .error { background-color: #ffebee; color: var(--color-error); border-left: 5px solid var(--color-error); }
+        .info { background-color: #e1f5fe; color: var(--color-primary-dark); border-left: 5px solid var(--color-primary); }
+
+        .split-form { display: flex; gap: 30px; margin-bottom: 30px;}
+        .split-form > div { flex: 1; }
+        
+        #exportButton { background-color: #607D8B; } 
+        #exportButton:hover { background-color: #455A64; }
+        #clearAllButton { background-color: var(--color-warning); margin-top: 0; } 
+        #clearAllButton:hover { background-color: #E65100; }
+
+        .progress-container { margin-top: 20px; background-color: #e0e0e0; border-radius: 5px; overflow: hidden; height: 25px; display: none; }
+        .progress-bar { height: 100%; width: 0%; background-color: var(--color-primary); text-align: center; line-height: 25px; color: white; font-weight: 600; font-size: 0.8em; transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="tab-nav">
+            <button class="tab-button active" onclick="window.openTab('list')">Daftar Buku</button>
+            <button class="tab-button" onclick="window.openTab('add')">Tambah Buku</button>
+            <button class="tab-button" onclick="window.openTab('data')">Manajemen Data</button>
+        </div>
+
+        <div class="tab-content">
+            
+            <div id="tab-list" class="tab-pane active">
+                <h2>Cari & Kelola Buku Perpustakaan</h2>
+
+                <div id="searchContainer">
+                    <input type="text" id="searchInput" placeholder="Ketik Judul atau Pengarang (min 3 kar.)" onkeyup="window.handleSearch()">
+                    <select id="searchField">
+                        <option value="title">Judul Buku</option>
+                        <option value="author">Pengarang</option>
+                    </select>
+                </div>
+                
+                <div id="results">
+                    <p class="info">Masukkan kata kunci untuk memulai pencarian.</p>
+                </div>
+            </div>
+
+            <div id="tab-add" class="tab-pane">
+                <h2>Tambahkan Entri Buku Baru</h2>
+
+                <div class="form-section">
+                    <h3>Input Manual (Satu per Satu)</h3>
+                    <form id="addBookForm">
+                        <label for="add_title">Judul Buku:</label>
+                        <input type="text" id="add_title" required>
+
+                        <label for="add_author">Pengarang:</label>
+                        <input type="text" id="add_author" required>
+
+                        <div class="split-form">
+                            <div>
+                                <label for="add_block">Blok:</label>
+                                <input type="text" id="add_block" required>
+                            </div>
+                            <div>
+                                <label for="add_shelf">Rak:</label>
+                                <input type="text" id="add_shelf" required>
+                            </div>
+                            <div>
+                                <label for="add_copy">Eks (Eksemplar):</label>
+                                <input type="number" id="add_copy" required min="1" value="1">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="action-btn">Tambahkan Buku</button>
+                    </form>
+                    <div id="manualMessage" class="message"></div>
+                </div>
+            </div>
+
+            <div id="tab-data" class="tab-pane">
+                <h2>Manajemen Data: Impor, Ekspor, dan Hapus</h2>
+
+                <div class="split-form">
+                    <div class="form-section">
+                        <h3>Impor Data Massal (XLSX)</h3>
+                        <p style="font-size: 0.9em; color: #666;">
+                            Unggah file **XLSX**. Baris akan **DITOLAK** jika kolom "Judul Buku" kosong.
+                        </p>
+                        <input type="file" id="xlsxFile" accept=".xlsx" />
+                        <button onclick="window.importFromXLSX()" class="action-btn">Mulai Impor Data</button>
+                        
+                        <div id="progressBarContainer" class="progress-container">
+                            <div id="progressBar" class="progress-bar">0%</div>
+                        </div>
+
+                        <div id="importMessage" class="message"></div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Ekspor Data (XLSX)</h3>
+                        <p style="font-size: 0.9em; color: #666;">
+                            Unduh semua data buku yang tersimpan di database.
+                        </p>
+                        <label>Total Buku di Database:</label>
+                        <p id="totalBooksCount" style="font-size: 1.5em; font-weight: bold; color: var(--color-primary-dark); margin-top: 5px;">...</p>
+                        
+                        <button id="exportButton" onclick="window.exportToXLSX()" class="action-btn">Ekspor Semua Data ke XLSX</button>
+                        <div id="exportMessage" class="message"></div>
+                    </div>
+                </div>
+
+                <div class="form-section" style="background-color: #fce4e4;">
+                    <h3>Hapus Semua Data (RISIKO TINGGI)</h3>
+                    <p style="font-size: 0.9em; color: var(--color-error); font-weight: bold;">
+                        PERINGATAN: Tindakan ini akan menghapus **SELURUH** data buku dari database. Data tidak dapat dikembalikan.
+                    </p>
+                    <button id="clearAllButton" onclick="window.confirmClearAllData()" class="action-btn">HAPUS SEMUA BUKU</button>
+                    <div id="clearMessage" class="message"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ----------------------------------------------------------------------
+        // A. FIREBASE CONFIGURATION & INITIALIZATION (v8 KLASIK)
+        // ----------------------------------------------------------------------
+        const firebaseConfig = {
+            // GANTI DENGAN KUNCI ANDA YANG ASLI!
+            apiKey: "AIzaSyC9flInCggKcfWril97oSKGRQoHIr-UAXU", 
+            authDomain: "databuku-2c3eb.firebaseapp.com",
+            databaseURL: "https://databuku-2c3eb-default-rtdb.firebaseio.com",
+            projectId: "databuku-2c3eb",
+            storageBucket: "databuku-2c3eb.firebasestorage.app",
+            messagingSenderId: "875386002451",
+            appId: "1:875386002451:web:cdf49ba64e5246e47773e6"
+        };
+
+        // Inisialisasi Firebase (v8)
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const booksRef = database.ref('books'); 
+
+
+        // ----------------------------------------------------------------------
+        // B. FUNGSI UTILITAS UMUM
+        // ----------------------------------------------------------------------
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            element.classList.remove('show'); 
+            element.style.display = 'none';
+            element.textContent = message;
+            element.className = 'message ' + type;
+            
+            setTimeout(() => {
+                element.style.display = 'block';
+                element.classList.add('show'); 
+            }, 10);
+
+            setTimeout(() => {
+                element.classList.remove('show');
+                setTimeout(() => { element.style.display = 'none'; }, 500); 
+            }, 5000);
+        }
+        window.showMessage = showMessage; 
+
+        function updateProgressBar(current, total) {
+            const progressBar = document.getElementById('progressBar');
+            const container = document.getElementById('progressBarContainer');
+            
+            if (!progressBar || !container) return;
+            
+            if (total === 0) {
+                 container.style.display = 'none';
+                 return;
+            }
+
+            const percentage = Math.round((current / total) * 100);
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = `${percentage}% (${current}/${total})`;
+
+            container.style.display = 'block';
+        }
+        window.updateProgressBar = updateProgressBar;
+
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+            const activeTabButton = document.querySelector(`.tab-button[onclick*='${tabId}']`);
+            if (activeTabButton) {
+                activeTabButton.classList.add('active');
+            }
+            
+            const activeTabPane = document.getElementById(`tab-${tabId}`);
+            if (activeTabPane) {
+                activeTabPane.classList.add('active');
+            }
+            
+            if (tabId === 'data' && window.updateBookCount) {
+                window.updateBookCount(); 
+            }
+        }
+        window.openTab = openTab;
+
+
+        // ----------------------------------------------------------------------
+        // C. FUNGSI FIREBASE (CRUD)
+        // ----------------------------------------------------------------------
+
+        // MENGHITUNG BUKU
+        window.updateBookCount = function() {
+            booksRef.once('value').then(snapshot => {
+                const count = snapshot.numChildren();
+                document.getElementById('totalBooksCount').textContent = count;
+            }).catch(error => {
+                document.getElementById('totalBooksCount').textContent = 'Error';
+            });
+        }
+        
+        // HAPUS SATU PER SATU
+        window.deleteBook = async function(bookId) {
+            try {
+                await booksRef.child(bookId).remove();
+                window.handleSearch(); 
+                window.updateBookCount();
+                showMessage('results', `Buku berhasil dihapus.`, 'success');
+            } catch (error) {
+                showMessage('results', '❌ Gagal menghapus buku: ' + error.message, 'error');
+            }
+        }
+        
+        // TAMBAH BUKU (Manual)
+        window.addBookManual = async function(newBook) {
+            try {
+                await booksRef.push(newBook);
+                showMessage('manualMessage', '✨ Buku berhasil ditambahkan!', 'success');
+                document.getElementById('addBookForm').reset();
+                document.getElementById('add_copy').value = '1';
+                window.updateBookCount();
+            } catch (error) {
+                showMessage('manualMessage', '❌ Gagal menambahkan buku: ' + error.message, 'error');
+            }
+        }
+
+        // HAPUS SEMUA DATA
+        window.clearAllData = async function() {
+            showMessage('clearMessage', '⏳ Memulai penghapusan semua data...', 'info');
+            try {
+                // Set referensi books menjadi null
+                await booksRef.set(null); 
+                showMessage('clearMessage', '🔥 SELURUH DATA BUKU BERHASIL DIHAPUS!', 'success');
+                window.updateBookCount();
+            } catch (error) {
+                 showMessage('clearMessage', '❌ Gagal menghapus semua data: ' + error.message, 'error');
+            }
+        }
+        
+        window.confirmClearAllData = function() {
+            const confirmation = prompt("Ketik kata 'HAPUS SEMUA' (huruf besar) untuk mengonfirmasi penghapusan SELURUH data buku:");
+            if (confirmation === 'HAPUS SEMUA') {
+                window.clearAllData(); 
+            } else if (confirmation !== null) {
+                showMessage('clearMessage', 'Konfirmasi tidak valid. Penghapusan dibatalkan.', 'info');
+            }
+        }
+
+
+        // IMPOR XLSX (Excel)
+        window.importFromXLSX = function() {
+            const fileInput = document.getElementById('xlsxFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showMessage('importMessage', '⚠️ Silakan pilih file XLSX (Excel) terlebih dahulu.', 'error');
+                return;
+            }
+            
+            updateProgressBar(0, 0); 
+            showMessage('importMessage', '⏳ Memproses file Excel, harap tunggu...', 'info');
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const parsedData = XLSX.utils.sheet_to_json(worksheet); 
+                    
+                    let successfulImports = 0;
+                    let failedImports = 0;
+                    let processedCount = 0; 
+                    
+                    const dataToProcess = parsedData;
+                    const totalRows = dataToProcess.length;
+
+                    if (totalRows === 0) {
+                        showMessage('importMessage', '⚠️ File XLSX kosong atau tidak ada data yang valid.', 'error');
+                        updateProgressBar(0, 0); 
+                        return;
+                    }
+
+                    const fieldMap = {
+                        "Judul Buku": "title", "Pengarang": "author", "Blok": "block", "Rak": "shelf", "Eksemplar": "copy"
+                    };
+
+                    const promises = dataToProcess.map(row => {
+                        const titleValue = row["Judul Buku"] ? String(row["Judul Buku"]).trim() : "";
+                        
+                        if (titleValue === "") { 
+                            failedImports++;
+                            processedCount++;
+                            updateProgressBar(processedCount, totalRows); 
+                            return Promise.resolve();
+                        }
+
+                        const bookData = {};
+                        bookData.title = titleValue;
+                        
+                        for (const xlsxKey in fieldMap) {
+                             const fieldName = fieldMap[xlsxKey];
+                             if (fieldName === 'title') continue; 
+                             if (row[xlsxKey] && String(row[xlsxKey]).trim() !== "") {
+                                 bookData[fieldName] = String(row[xlsxKey]).trim();
+                             }
+                        }
+
+                        // Simpan ke Firebase
+                        return booksRef.push(bookData).then(() => { 
+                             successfulImports++; 
+                        }).catch((error) => { 
+                             console.error("Gagal simpan ke Firebase:", error);
+                             failedImports++; 
+                        }).finally(() => {
+                             processedCount++;
+                             updateProgressBar(processedCount, totalRows); 
+                        });
+                    });
+
+                    Promise.all(promises).then(() => {
+                        const totalRecords = successfulImports + failedImports;
+                        const messageType = failedImports === 0 ? 'success' : 'error';
+                        
+                        updateProgressBar(totalRows, totalRows); 
+                        
+                        showMessage(
+                            'importMessage', 
+                            `✅ Impor Selesai! Total baris diproses: ${totalRecords}. Berhasil: ${successfulImports}, Ditolak (Judul Kosong): ${failedImports}.`, 
+                            messageType
+                        );
+                        fileInput.value = ''; 
+                        updateBookCount(); 
+                        
+                        setTimeout(() => updateProgressBar(0, 0), 3000);
+
+                    });
+
+                } catch (error) {
+                    showMessage('importMessage', '❌ Error saat memproses XLSX: Pastikan format file dan header benar. ' + error.message, 'error');
+                    updateProgressBar(0, 0); 
+                }
+            };
+            
+            reader.onerror = function(ex) {
+                showMessage('importMessage', '❌ Gagal membaca file: ' + ex.message, 'error');
+                updateProgressBar(0, 0); 
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // EKSPOR KE XLSX (Excel)
+        window.exportToXLSX = async function() {
+            showMessage('exportMessage', '⏳ Mengambil data dan menyiapkan ekspor ke XLSX...', 'info');
+            
+            try {
+                const snapshot = await booksRef.once('value');
+                if (!snapshot.exists()) {
+                    showMessage('exportMessage', '⚠️ Tidak ada data buku untuk diekspor.', 'error');
+                    return;
+                }
+
+                const books = [];
+                snapshot.forEach(childSnapshot => {
+                    const book = childSnapshot.val();
+                    books.push({
+                        "Judul Buku": book.title || '',
+                        "Pengarang": book.author || '',
+                        "Blok": book.block || '',
+                        "Rak": book.shelf || '',
+                        "Eksemplar": book.copy || '' 
+                    });
+                });
+
+                const worksheet = XLSX.utils.json_to_sheet(books);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Data Buku");
+
+                const filename = `DataBuku_Perpus_${new Date().toISOString().slice(0,10)}.xlsx`;
+                XLSX.writeFile(workbook, filename);
+
+                showMessage('exportMessage', `✅ Berhasil mengekspor ${books.length} buku ke file XLSX!`, 'success');
+
+            } catch (error) {
+                console.error("Error saat ekspor:", error);
+                showMessage('exportMessage', '❌ Gagal mengekspor data: ' + error.message, 'error');
+            }
+        }
+
+
+        // ----------------------------------------------------------------------
+        // D. TAB 1: PENCARIAN & EVENT LISTENERS
+        // ----------------------------------------------------------------------
+
+        async function searchBooks(searchText, searchField) {
+            if (searchText.length < 3) return [];
+            
+            const searchKey = searchText;
+            const endKey = searchText + '\uf8ff'; 
+
+            const searchQuery = booksRef.orderByChild(searchField).startAt(searchKey).endAt(endKey);
+
+            try {
+                const snapshot = await searchQuery.once('value');
+                const results = [];
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        results.push({
+                            id: childSnapshot.key,
+                            ...childSnapshot.val()
+                        });
+                    });
+                    const lowerSearchText = searchText.toLowerCase();
+                    return results.filter(book => String(book[searchField] || '').toLowerCase().startsWith(lowerSearchText));
+                }
+                return [];
+            } catch (error) {
+                console.error("Error saat mencari buku:", error);
+                return [];
+            }
+        }
+
+        function displayResults(books) {
+            const resultsDiv = document.getElementById('results');
+            if (!resultsDiv) return;
+            
+            resultsDiv.innerHTML = '';
+            const searchInput = document.getElementById('searchInput');
+
+            if (books.length === 0 && searchInput && searchInput.value.length >= 3) {
+                resultsDiv.innerHTML = '<p class="info">Maaf, tidak ada buku yang cocok.</p>';
+                return;
+            } else if (books.length === 0) {
+                 resultsDiv.innerHTML = '<p class="info">Masukkan minimal 3 karakter untuk mencari.</p>';
+                 return;
+            }
+
+            books.forEach(book => {
+                const item = document.createElement('div');
+                item.className = 'book-item';
+                item.innerHTML = `
+                    <div class="book-info">
+                        <h3>${book.title || 'Judul Kosong'}</h3>
+                        <p><strong>Pengarang:</strong> ${book.author || '-'}</p>
+                        <p><strong>Lokasi:</strong> Blok ${book.block || '-'}, Rak ${book.shelf || '-'} | <strong>Eks:</strong> ${book.copy || '-'}</p>
+                    </div>
+                    <button class="delete-single-btn" onclick="window.confirmDeleteBook('${book.id}', '${book.title ? book.title.replace(/'/g, "\\'") : 'Buku Ini'}')">Hapus</button>
+                `;
+                resultsDiv.appendChild(item);
+            });
+        }
+        
+        window.confirmDeleteBook = function(bookId, title) {
+            if (confirm(`Anda yakin ingin menghapus buku "${title}"? Tindakan ini tidak dapat dibatalkan.`)) {
+                window.deleteBook(bookId); 
+            }
+        }
+        
+        let searchTimeout;
+        window.handleSearch = function() {
+            clearTimeout(searchTimeout);
+            const searchInput = document.getElementById('searchInput');
+            const searchText = searchInput ? searchInput.value.trim() : '';
+            const searchField = document.getElementById('searchField') ? document.getElementById('searchField').value : '';
+            const resultsDiv = document.getElementById('results');
+
+            if (searchText.length < 3) {
+                displayResults([]);
+                return;
+            }
+
+            if (resultsDiv) resultsDiv.innerHTML = '<p class="info">Mencari...</p>';
+            
+            searchTimeout = setTimeout(async () => {
+                const books = await searchBooks(searchText, searchField);
+                displayResults(books);
+            }, 300);
+        }
+
+        // ----------------------------------------------------------------------
+        // E. EVENT LISTENERS
+        // ----------------------------------------------------------------------
+
+        // Mengatasi error 'addEventListener' by memastikan elemen ada
+        const addBookForm = document.getElementById('addBookForm');
+        if (addBookForm) {
+            addBookForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const newBook = {
+                    title: document.getElementById('add_title').value.trim(),
+                    author: document.getElementById('add_author').value.trim(),
+                    block: document.getElementById('add_block').value.trim(),
+                    shelf: document.getElementById('add_shelf').value.trim(),
+                    copy: document.getElementById('add_copy').value.trim()
+                };
+
+                window.addBookManual(newBook);
+            });
+        }
+        
+        // Memastikan tampilan awal adalah 'Daftar Buku'
+        window.addEventListener('load', () => {
+             openTab('list');
+        });
+
+    </script>
+</body>
+</html>
