@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencarian Koleksi Buku (Modern & Bersih)</title>
+    <title>Pencarian Koleksi Buku (Responsif - Cyan)</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        /* [STYLES SAMA SEPERTI VERSI SEBELUMNYA UNTUK KONSISTENSI] */
+        /* * SKEMA WARNA: CYAN ACCENT
+         */
         :root {
-            --color-primary: #3F51B5; 
-            --color-primary-dark: #303F9F; 
+            --color-primary: #00BCD4; 
+            --color-primary-dark: #0097A7; 
             --color-text: #263238;    
             --color-text-light: #546E7A; 
             --color-background: #eceff1; 
@@ -25,7 +26,7 @@
             font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--color-background);
             color: var(--color-text);
-            padding: 20px;
+            padding: 10px; /* Padding dikurangi untuk sempit */
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -38,50 +39,52 @@
             background-color: var(--color-card-bg);
             border-radius: 12px;
             box-shadow: 0 10px 30px var(--color-shadow);
-            padding: 40px;
+            padding: 20px; /* Padding dikurangi untuk sempit */
         }
 
         h2 {
             color: var(--color-primary-dark);
-            font-weight: 500;
+            /* PERUBAHAN: Kapital semua dan Tebal */
+            font-weight: 700; 
+            text-transform: uppercase; 
             margin-top: 0;
             padding-bottom: 15px;
             border-bottom: 1px solid var(--color-border);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             text-align: center;
-            font-size: 1.8em;
+            font-size: 1.2em; /* Ukuran font H2 dikurangi */
         }
         
         #searchBar {
             display: flex;
-            margin-bottom: 30px;
+            margin-bottom: 20px; /* Margin dikurangi */
         }
 
         #searchInput {
             flex-grow: 1;
-            padding: 16px;
+            padding: 12px; /* Padding dikurangi */
             border: 1px solid var(--color-border);
             border-radius: 8px;
-            font-size: 1.1em;
+            font-size: 1em; 
             transition: all 0.2s ease-in-out;
         }
 
         #searchInput:focus {
             border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.2);
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.2); 
             outline: none;
         }
 
         .book-item {
             background-color: var(--color-card-bg);
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 12px; /* Padding dikurangi */
+            margin-bottom: 12px; /* Margin dikurangi */
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
             transition: all 0.3s ease;
             display: flex;
             align-items: center; 
-            gap: 25px;
+            gap: 15px; /* Jarak dikurangi */
             border: 1px solid var(--color-border); 
         }
 
@@ -92,8 +95,8 @@
         }
 
         .book-cover {
-            width: 55px; 
-            height: 80px; 
+            width: 45px; /* Ukuran cover dikurangi */
+            height: 65px; /* Ukuran cover dikurangi */
             border-radius: 3px;
             background: linear-gradient(to bottom, var(--color-primary), var(--color-primary-dark));
             box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2); 
@@ -105,7 +108,7 @@
             content: '';
             position: absolute;
             top: 0;
-            left: 5px;
+            left: 3px; /* Posisi spine dikurangi */
             width: 2px;
             height: 100%;
             background-color: rgba(255, 255, 255, 0.3);
@@ -120,54 +123,112 @@
         
         .book-info h3 {
             color: var(--color-text); 
-            margin: 0 0 5px 0;
-            font-size: 1.25em;
+            margin: 0 0 3px 0; /* Margin dikurangi */
+            font-size: 1.1em; /* Ukuran font dikurangi */
             font-weight: 600;
         }
 
         .book-info .author-text {
             color: var(--color-text-light); 
-            margin: 0 0 10px 0;
+            margin: 0 0 5px 0; /* Margin dikurangi */
             font-style: italic;
-            font-size: 0.95em;
+            font-size: 0.9em; /* Ukuran font dikurangi */
         }
 
         .book-info .location-bar {
             margin-top: 5px;
-            font-size: 0.9em; 
+            font-size: 0.85em; /* Ukuran font dikurangi */
             color: var(--color-text-light);
             border-top: 1px dashed var(--color-border);
-            padding-top: 8px;
+            padding-top: 5px; /* Padding dikurangi */
             display: flex; 
-            gap: 20px;
+            gap: 10px; /* Jarak dikurangi */
+            flex-wrap: wrap; /* Izinkan bungkus pada layar sangat kecil */
         }
         
-        .location-bar .loc-data {
+        .location-bar .loc-data, .location-bar .copy-data {
             font-weight: 600;
             color: var(--color-primary-dark);
-            background-color: #e8eaf6; 
-            padding: 3px 8px;
+            background-color: #DCEEFF; 
+            padding: 2px 6px; /* Padding dikurangi */
             border-radius: 4px;
         }
         
         .location-bar .copy-data {
             color: var(--color-text);
             font-weight: 500;
+            background-color: #f0f0f0; /* Beri warna netral */
         }
 
         .message { 
-            margin-top: 20px; 
+            margin-top: 10px; /* Margin dikurangi */
             padding: 15px; 
             border-radius: 8px; 
             font-weight: 500;
         }
-        .info { background-color: #e8eaf6; color: var(--color-primary-dark); border-left: 5px solid var(--color-primary); }
+        .info { 
+            background-color: #DCEEFF; 
+            color: var(--color-primary-dark); 
+            border-left: 5px solid var(--color-primary); 
+        }
+
+        /* ------------------------------------------- */
+        /* MEDIA QUERY UNTUK LAYAR SEMPIT (Mobile)     */
+        /* ------------------------------------------- */
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+            
+            .search-container {
+                padding: 15px;
+                border-radius: 0; /* Opsional: hilangkan radius di layar penuh */
+            }
+
+            h2 {
+                font-size: 1em;
+            }
+
+            #searchInput {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+
+            .book-item {
+                /* Tata letak diubah menjadi kolom pada layar sempit */
+                flex-direction: column; 
+                align-items: flex-start;
+                padding: 15px 10px;
+            }
+
+            .book-cover {
+                margin-bottom: 10px;
+            }
+
+            .book-info {
+                width: 100%;
+            }
+
+            .book-info h3 {
+                font-size: 1.15em;
+            }
+
+            .book-info .author-text {
+                font-size: 0.9em;
+            }
+            
+            .book-info .location-bar {
+                flex-direction: column; /* Lokasi dan eksemplar di baris terpisah */
+                gap: 5px;
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="search-container">
-        <h2>Pencarian Koleksi Buku Digital</h2>
+        <h2>Pencarian Koleksi Buku Digital</h2> 
 
         <div id="searchBar">
             <input type="text" id="searchInput" placeholder="Ketik Judul atau Pengarang untuk Pencarian Instan" onkeyup="window.handleSearch()">
