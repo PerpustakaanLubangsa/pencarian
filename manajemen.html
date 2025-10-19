@@ -11,7 +11,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        /* [STYLES SAMA SEPERTI SEBELUMNYA, DILOMPAT UNTUK KEJELASAN KODE] */
         :root {
             --color-primary: #00BCD4; 
             --color-primary-dark: #00ACC1; 
@@ -22,6 +21,7 @@
             --color-error: #F44336;
             --color-border: #eee;
             --color-warning: #FF9800; 
+            --color-modal-overlay: rgba(0, 0, 0, 0.6);
         }
 
         body {
@@ -56,11 +56,35 @@
         #searchInput { flex-grow: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; transition: border-color 0.3s; }
         #searchInput:focus { border-color: var(--color-primary); outline: none; }
 
-        .book-item { background-color: #f7f7f7; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 5px solid var(--color-primary); box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); display: flex; justify-content: space-between; align-items: center; }
+        .book-item { 
+            background-color: #f7f7f7; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 8px; 
+            border-left: 5px solid var(--color-primary); 
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
         .book-info { flex-grow: 1; }
         .book-item h3 { color: var(--color-primary-dark); margin: 0 0 5px 0; }
-        .delete-single-btn { background-color: var(--color-error); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; margin-left: 15px; font-weight: 600; transition: background-color 0.3s; }
-        .delete-single-btn:hover { background-color: #D32F2F; }
+        
+        .book-actions { display: flex; gap: 10px; } /* Untuk menata tombol edit/hapus */
+
+        .action-small-btn { 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: background-color 0.3s; 
+        }
+        .action-small-btn.edit { background-color: var(--color-primary); }
+        .action-small-btn.edit:hover { background-color: var(--color-primary-dark); }
+        .action-small-btn.delete { background-color: var(--color-error); }
+        .action-small-btn.delete:hover { background-color: #D32F2F; }
 
         .form-section { background-color: var(--color-background); padding: 25px; border-radius: 10px; margin-bottom: 30px; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05); }
         input:not([type="submit"]):not([type="button"]):not([type="file"]), select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; transition: border-color 0.3s; }
@@ -84,6 +108,67 @@
 
         .progress-container { margin-top: 20px; background-color: #e0e0e0; border-radius: 5px; overflow: hidden; height: 25px; display: none; }
         .progress-bar { height: 100%; width: 0%; background-color: var(--color-primary); text-align: center; line-height: 25px; color: white; font-weight: 600; font-size: 0.8em; transition: width 0.3s ease; }
+
+        /* --- Modal (Pop-up) Styles --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--color-modal-overlay);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--color-card-bg);
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            color: var(--color-primary-dark);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.8em;
+            cursor: pointer;
+            color: #999;
+            background: none;
+            border: none;
+            line-height: 1;
+        }
+        .modal-close-btn:hover {
+            color: var(--color-error);
+        }
+        .modal-content .action-btn { margin-top: 20px; } 
+        .modal-content .message { margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -98,10 +183,10 @@
         <div class="tab-content">
             
             <div id="tab-list" class="tab-pane active">
-                <h2>Cari & Kelola Buku Perpustakaan</h2>
+                <h2>Kelola Semua Buku Perpustakaan</h2>
 
                 <div id="searchContainer">
-                    <input type="text" id="searchInput" placeholder="Ketik Judul atau Pengarang (min 3 kar.)" onkeyup="window.handleSearch()">
+                    <input type="text" id="searchInput" placeholder="Ketik Judul atau Pengarang (kosongkan untuk tampilkan semua)" onkeyup="window.handleSearch()">
                     <select id="searchField">
                         <option value="title">Judul Buku</option>
                         <option value="author">Pengarang</option>
@@ -109,7 +194,7 @@
                 </div>
                 
                 <div id="results">
-                    <p class="info">Masukkan kata kunci untuk memulai pencarian.</p>
+                    <p class="info">Memuat semua buku...</p> 
                 </div>
             </div>
 
@@ -170,7 +255,7 @@
                         <p style="font-size: 0.9em; color: #666;">
                             Unduh semua data buku yang tersimpan di database.
                         </p>
-                        <label>Total Buku di Database:</label>
+                        <label>Total Buku di Database (Cache):</label>
                         <p id="totalBooksCount" style="font-size: 1.5em; font-weight: bold; color: var(--color-primary-dark); margin-top: 5px;">...</p>
                         
                         <button id="exportButton" onclick="window.exportToXLSX()" class="action-btn">Ekspor Semua Data ke XLSX</button>
@@ -191,6 +276,43 @@
         </div>
     </div>
 
+    
+<div id="editBookModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="window.closeEditModal()">&times;</button>
+            <h3>Edit Detail Buku</h3>
+            <form id="editBookForm">
+                
+<input type="hidden" id="edit_bookId"> 
+
+                <label for="edit_title">Judul Buku:</label>
+                <input type="text" id="edit_title" required>
+
+                <label for="edit_author">Pengarang:</label>
+                <input type="text" id="edit_author" required>
+
+                <div class="split-form">
+                    <div>
+                        <label for="edit_block">Blok:</label>
+                        <input type="text" id="edit_block" required>
+                    </div>
+                    <div>
+                        <label for="edit_shelf">Rak:</label>
+                        <input type="text" id="edit_shelf" required>
+                    </div>
+                    <div>
+                        <label for="edit_copy">Eks (Eksemplar):</label>
+                        <input type="number" id="edit_copy" required min="1">
+                    </div>
+                </div>
+
+                <button type="submit" class="action-btn">Simpan Perubahan</button>
+            </form>
+            <div id="editMessage" class="message"></div>
+        </div>
+    </div>
+
+
     <script>
         // ----------------------------------------------------------------------
         // A. FIREBASE CONFIGURATION & INITIALIZATION (v8 KLASIK)
@@ -210,7 +332,13 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const booksRef = database.ref('books'); 
-
+        
+        // ======================================================================
+        // [CACHE SYSTEM] Deklarasi Variabel Global untuk Menyimpan Data Buku
+        // ======================================================================
+        let bookCache = null; // Menyimpan semua data buku dalam bentuk array
+        let bookObjectCache = {}; // Menyimpan semua data buku dalam bentuk objek {id: book} untuk pencarian cepat berdasarkan ID
+        let isCacheLoading = false; // Flag untuk mencegah pemuatan ganda
 
         // ----------------------------------------------------------------------
         // B. FUNGSI UTILITAS UMUM
@@ -272,17 +400,26 @@
             
             if (tabId === 'data' && window.updateBookCount) {
                 window.updateBookCount(); 
+            } else if (tabId === 'list' && window.loadAllBooks) { 
+                // Selalu panggil loadAllBooks saat membuka tab list
+                window.loadAllBooks();
             }
         }
         window.openTab = openTab;
 
 
         // ----------------------------------------------------------------------
-        // C. FUNGSI FIREBASE (CRUD)
+        // C. FUNGSI FIREBASE (CRUD) & SINKRONISASI CACHE
         // ----------------------------------------------------------------------
 
         // MENGHITUNG BUKU
         window.updateBookCount = function() {
+            // Cek cache sebelum panggil Firebase
+            if (bookCache !== null) {
+                document.getElementById('totalBooksCount').textContent = bookCache.length;
+                return;
+            }
+
             booksRef.once('value').then(snapshot => {
                 const count = snapshot.numChildren();
                 document.getElementById('totalBooksCount').textContent = count;
@@ -295,7 +432,21 @@
         window.deleteBook = async function(bookId) {
             try {
                 await booksRef.child(bookId).remove();
-                window.handleSearch(); 
+                
+                // [CACHE] Hapus dari cache
+                if (bookObjectCache.hasOwnProperty(bookId)) {
+                    delete bookObjectCache[bookId];
+                    bookCache = Object.values(bookObjectCache);
+                }
+
+                // Perbarui tampilan
+                const searchText = document.getElementById('searchInput').value.trim();
+                if (searchText.length >= 3) {
+                    window.handleSearch(); 
+                } else {
+                    window.loadAllBooks(); 
+                }
+                
                 window.updateBookCount();
                 showMessage('results', `Buku berhasil dihapus.`, 'success');
             } catch (error) {
@@ -306,7 +457,14 @@
         // TAMBAH BUKU (Manual)
         window.addBookManual = async function(newBook) {
             try {
-                await booksRef.push(newBook);
+                const newRef = await booksRef.push(newBook);
+                const bookId = newRef.key;
+
+                // [CACHE] Tambahkan ke cache
+                const bookWithId = { id: bookId, ...newBook };
+                bookObjectCache[bookId] = bookWithId;
+                bookCache = Object.values(bookObjectCache);
+                
                 showMessage('manualMessage', '✨ Buku berhasil ditambahkan!', 'success');
                 document.getElementById('addBookForm').reset();
                 document.getElementById('add_copy').value = '1';
@@ -316,14 +474,45 @@
             }
         }
 
+        // FUNGSI UPDATE BUKU (EDIT)
+        window.updateBook = async function(bookId, updatedBookData) {
+            try {
+                await booksRef.child(bookId).update(updatedBookData);
+
+                // [CACHE] Perbarui di cache
+                if (bookObjectCache.hasOwnProperty(bookId)) {
+                    bookObjectCache[bookId] = { id: bookId, ...updatedBookData };
+                    bookCache = Object.values(bookObjectCache);
+                }
+
+                showMessage('editMessage', '✅ Buku berhasil diperbarui!', 'success');
+                
+                // Refresh daftar buku setelah update
+                const searchText = document.getElementById('searchInput').value.trim();
+                if (searchText.length >= 3) {
+                    window.handleSearch(); 
+                } else {
+                    window.loadAllBooks(); 
+                }
+                window.closeEditModal(); 
+            } catch (error) {
+                showMessage('editMessage', '❌ Gagal memperbarui buku: ' + error.message, 'error');
+            }
+        }
+
         // HAPUS SEMUA DATA
         window.clearAllData = async function() {
             showMessage('clearMessage', '⏳ Memulai penghapusan semua data...', 'info');
             try {
-                // Set referensi books menjadi null
                 await booksRef.set(null); 
+                
+                // [CACHE] Kosongkan cache
+                bookCache = [];
+                bookObjectCache = {};
+
                 showMessage('clearMessage', '🔥 SELURUH DATA BUKU BERHASIL DIHAPUS!', 'success');
                 window.updateBookCount();
+                window.loadAllBooks(); 
             } catch (error) {
                  showMessage('clearMessage', '❌ Gagal menghapus semua data: ' + error.message, 'error');
             }
@@ -375,6 +564,10 @@
                         updateProgressBar(0, 0); 
                         return;
                     }
+                    
+                    // [CACHE] Hapus cache sebelum impor massal
+                    bookCache = null;
+                    bookObjectCache = {};
 
                     const fieldMap = {
                         "Judul Buku": "title", "Pengarang": "author", "Blok": "block", "Rak": "shelf", "Eksemplar": "copy"
@@ -426,6 +619,7 @@
                         );
                         fileInput.value = ''; 
                         updateBookCount(); 
+                        window.loadAllBooks(); // Muat ulang, ini akan mengisi cache baru
                         
                         setTimeout(() => updateProgressBar(0, 0), 3000);
 
@@ -450,25 +644,31 @@
             showMessage('exportMessage', '⏳ Mengambil data dan menyiapkan ekspor ke XLSX...', 'info');
             
             try {
-                const snapshot = await booksRef.once('value');
-                if (!snapshot.exists()) {
-                    showMessage('exportMessage', '⚠️ Tidak ada data buku untuk diekspor.', 'error');
-                    return;
+                let books = [];
+                
+                // [CACHE] Cek cache dulu untuk ekspor
+                if (bookCache !== null && bookCache.length > 0) {
+                    books = bookCache;
+                } else {
+                    // Jika cache kosong, ambil dari Firebase
+                    const snapshot = await booksRef.once('value');
+                    if (!snapshot.exists()) {
+                        showMessage('exportMessage', '⚠️ Tidak ada data buku untuk diekspor.', 'error');
+                        return;
+                    }
+                    snapshot.forEach(childSnapshot => {
+                        // Tidak perlu menyimpan ke cache karena fungsi ini hanya untuk ekspor
+                        books.push(childSnapshot.val());
+                    });
                 }
 
-                const books = [];
-                snapshot.forEach(childSnapshot => {
-                    const book = childSnapshot.val();
-                    books.push({
-                        "Judul Buku": book.title || '',
-                        "Pengarang": book.author || '',
-                        "Blok": book.block || '',
-                        "Rak": book.shelf || '',
-                        "Eksemplar": book.copy || '' 
-                    });
-                });
-
-                const worksheet = XLSX.utils.json_to_sheet(books);
+                const worksheet = XLSX.utils.json_to_sheet(books.map(book => ({
+                    "Judul Buku": book.title || '',
+                    "Pengarang": book.author || '',
+                    "Blok": book.block || '',
+                    "Rak": book.shelf || '',
+                    "Eksemplar": book.copy || '' 
+                })));
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Data Buku");
 
@@ -485,51 +685,87 @@
 
 
         // ----------------------------------------------------------------------
-        // D. TAB 1: PENCARIAN & EVENT LISTENERS
+        // D. TAB 1: PENCARIAN, PEMUATAN SEMUA BUKU & EDIT/HAPUS
         // ----------------------------------------------------------------------
 
-        async function searchBooks(searchText, searchField) {
-            if (searchText.length < 3) return [];
+        /**
+         * Memuat semua buku dari Firebase atau Cache.
+         */
+        window.loadAllBooks = async function() {
+            const resultsDiv = document.getElementById('results');
+            if (!resultsDiv) return;
             
-            const searchKey = searchText;
-            const endKey = searchText + '\uf8ff'; 
+            // [CACHE] Cek apakah cache sudah ada
+            if (bookCache !== null) {
+                 // Gunakan data dari cache (jika tidak sedang mencari)
+                 displayResults(bookCache, ' (dari Cache)');
+                 return;
+            }
+            
+            if (isCacheLoading) {
+                 resultsDiv.innerHTML = '<p class="info">⏳ Sedang memuat data (sedang berlangsung)...</p>';
+                 return;
+            }
 
-            const searchQuery = booksRef.orderByChild(searchField).startAt(searchKey).endAt(endKey);
+            resultsDiv.innerHTML = '<p class="info">⏳ Memuat semua buku dari database (perlu waktu sedikit lebih lama pada pemuatan pertama)...</p>';
+            isCacheLoading = true;
 
             try {
-                const snapshot = await searchQuery.once('value');
-                const results = [];
+                const snapshot = await booksRef.once('value');
+                const books = [];
+                const objCache = {};
+
                 if (snapshot.exists()) {
                     snapshot.forEach((childSnapshot) => {
-                        results.push({
+                        const book = {
                             id: childSnapshot.key,
                             ...childSnapshot.val()
-                        });
+                        };
+                        books.push(book);
+                        objCache[childSnapshot.key] = book;
                     });
-                    const lowerSearchText = searchText.toLowerCase();
-                    return results.filter(book => String(book[searchField] || '').toLowerCase().startsWith(lowerSearchText));
                 }
-                return [];
+                
+                // [CACHE] Simpan ke cache setelah berhasil dimuat
+                bookCache = books;
+                bookObjectCache = objCache;
+                
+                // Urutkan berdasarkan Judul
+                books.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                
+                if (books.length === 0) {
+                     resultsDiv.innerHTML = '<p class="info">Database kosong. Silakan <a href="#" onclick="window.openTab(\'add\')">tambahkan buku baru</a>.</p>';
+                } else {
+                     displayResults(books);
+                }
+                
+                window.updateBookCount(); // Perbarui jumlah setelah cache terisi
+                
             } catch (error) {
-                console.error("Error saat mencari buku:", error);
-                return [];
+                console.error("Error saat memuat semua buku:", error);
+                resultsDiv.innerHTML = '<p class="error">❌ Gagal memuat data buku.</p>';
+                bookCache = null; 
+                bookObjectCache = {};
+            } finally {
+                isCacheLoading = false;
             }
         }
 
-        function displayResults(books) {
+        function displayResults(books, source = '') {
             const resultsDiv = document.getElementById('results');
             if (!resultsDiv) return;
             
             resultsDiv.innerHTML = '';
-            const searchInput = document.getElementById('searchInput');
+            const totalCount = books.length;
+            
+            // Menampilkan pesan total hasil di atas daftar
+            const countMessage = document.createElement('p');
+            countMessage.className = 'info';
+            countMessage.style.marginBottom = '25px';
+            countMessage.style.display = 'block';
+            countMessage.innerHTML = `📚 Ditemukan **${totalCount}** buku${source}.`;
+            resultsDiv.appendChild(countMessage);
 
-            if (books.length === 0 && searchInput && searchInput.value.length >= 3) {
-                resultsDiv.innerHTML = '<p class="info">Maaf, tidak ada buku yang cocok.</p>';
-                return;
-            } else if (books.length === 0) {
-                 resultsDiv.innerHTML = '<p class="info">Masukkan minimal 3 karakter untuk mencari.</p>';
-                 return;
-            }
 
             books.forEach(book => {
                 const item = document.createElement('div');
@@ -540,7 +776,10 @@
                         <p><strong>Pengarang:</strong> ${book.author || '-'}</p>
                         <p><strong>Lokasi:</strong> Blok ${book.block || '-'}, Rak ${book.shelf || '-'} | <strong>Eks:</strong> ${book.copy || '-'}</p>
                     </div>
-                    <button class="delete-single-btn" onclick="window.confirmDeleteBook('${book.id}', '${book.title ? book.title.replace(/'/g, "\\'") : 'Buku Ini'}')">Hapus</button>
+                    <div class="book-actions">
+                        <button class="action-small-btn edit" onclick="window.openEditModal('${book.id}')">Edit</button>
+                        <button class="action-small-btn delete" onclick="window.confirmDeleteBook('${book.id}', '${book.title ? book.title.replace(/'/g, "\\'") : 'Buku Ini'}')">Hapus</button>
+                    </div>
                 `;
                 resultsDiv.appendChild(item);
             });
@@ -560,24 +799,88 @@
             const searchField = document.getElementById('searchField') ? document.getElementById('searchField').value : '';
             const resultsDiv = document.getElementById('results');
 
-            if (searchText.length < 3) {
-                displayResults([]);
+            if (searchText.length === 0) {
+                window.loadAllBooks();
                 return;
             }
 
-            if (resultsDiv) resultsDiv.innerHTML = '<p class="info">Mencari...</p>';
+            if (bookCache === null) {
+                // Jika cache belum dimuat, beri pesan dan muat cache
+                if (resultsDiv) resultsDiv.innerHTML = '<p class="info">Memuat data dari database sebelum melakukan pencarian...</p>';
+                window.loadAllBooks();
+                return;
+            }
+
+            if (searchText.length < 3) {
+                if (resultsDiv) resultsDiv.innerHTML = '<p class="info">Masukkan minimal 3 karakter untuk mencari.</p>';
+                return;
+            }
+
+            if (resultsDiv) resultsDiv.innerHTML = '<p class="info">Mencari di Cache...</p>';
             
             searchTimeout = setTimeout(async () => {
-                const books = await searchBooks(searchText, searchField);
-                displayResults(books);
-            }, 300);
+                const lowerSearchText = searchText.toLowerCase();
+                // Filter menggunakan cache (sangat cepat)
+                const books = bookCache.filter(book => 
+                    String(book[searchField] || '').toLowerCase().includes(lowerSearchText)
+                );
+                displayResults(books, ' (Hasil Pencarian di Cache)');
+            }, 100); 
         }
 
         // ----------------------------------------------------------------------
-        // E. EVENT LISTENERS
+        // E. FUNGSI MODAL EDIT BUKU
         // ----------------------------------------------------------------------
 
-        // Mengatasi error 'addEventListener' by memastikan elemen ada
+        window.openEditModal = async function(bookId) {
+            const modal = document.getElementById('editBookModal');
+            const editMessage = document.getElementById('editMessage');
+            editMessage.style.display = 'none'; 
+            
+            let book = null;
+
+            // [CACHE] Cek cache dulu untuk mengisi formulir
+            if (bookObjectCache.hasOwnProperty(bookId)) {
+                book = bookObjectCache[bookId];
+            } else {
+                 // Fallback: Jika tidak ada di cache (seharusnya tidak terjadi jika loadAllBooks dipanggil)
+                 try {
+                    const snapshot = await booksRef.child(bookId).once('value');
+                    if (snapshot.exists()) {
+                        book = { id: bookId, ...snapshot.val() };
+                    }
+                 } catch (error) {
+                    showMessage('results', '❌ Gagal memuat data buku untuk diedit: ' + error.message, 'error');
+                    return;
+                 }
+            }
+
+            if (book) {
+                document.getElementById('edit_bookId').value = bookId;
+                document.getElementById('edit_title').value = book.title || '';
+                document.getElementById('edit_author').value = book.author || '';
+                document.getElementById('edit_block').value = book.block || '';
+                document.getElementById('edit_shelf').value = book.shelf || '';
+                document.getElementById('edit_copy').value = book.copy || '1';
+
+                modal.classList.add('visible');
+            } else {
+                 showMessage('results', '❌ Buku tidak ditemukan untuk diedit.', 'error');
+            }
+        }
+
+        window.closeEditModal = function() {
+            const modal = document.getElementById('editBookModal');
+            modal.classList.remove('visible');
+            document.getElementById('editBookForm').reset(); 
+            document.getElementById('editMessage').style.display = 'none';
+        }
+
+
+        // ----------------------------------------------------------------------
+        // F. EVENT LISTENERS
+        // ----------------------------------------------------------------------
+
         const addBookForm = document.getElementById('addBookForm');
         if (addBookForm) {
             addBookForm.addEventListener('submit', function(e) {
@@ -595,7 +898,35 @@
             });
         }
         
-        // Memastikan tampilan awal adalah 'Daftar Buku'
+        const editBookForm = document.getElementById('editBookForm');
+        if (editBookForm) {
+            editBookForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const bookId = document.getElementById('edit_bookId').value;
+                const updatedBookData = {
+                    title: document.getElementById('edit_title').value.trim(),
+                    author: document.getElementById('edit_author').value.trim(),
+                    block: document.getElementById('edit_block').value.trim(),
+                    shelf: document.getElementById('edit_shelf').value.trim(),
+                    copy: document.getElementById('edit_copy').value.trim()
+                };
+
+                window.updateBook(bookId, updatedBookData);
+            });
+        }
+
+        // Tutup modal jika mengklik di luar konten modal
+        const editBookModalOverlay = document.getElementById('editBookModal');
+        if (editBookModalOverlay) {
+            editBookModalOverlay.addEventListener('click', function(e) {
+                if (e.target === editBookModalOverlay) {
+                    window.closeEditModal();
+                }
+            });
+        }
+        
+        // Memastikan tampilan awal adalah 'Daftar Buku' DAN MEMUAT SEMUA DATA
         window.addEventListener('load', () => {
              openTab('list');
         });
