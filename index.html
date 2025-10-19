@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencarian Koleksi Buku (Responsif - Cyan)</title>
+    <title>Pencarian Buku Sederhana</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        /* * SKEMA WARNA: CYAN ACCENT
-         */
+        /* SKEMA WARNA: CYAN ACCENT */
         :root {
             --color-primary: #00BCD4; 
             --color-primary-dark: #0097A7; 
@@ -19,53 +18,50 @@
             --color-background: #DCEEFF; 
             --color-card-bg: #ffffff;
             --color-border: #cfd8dc; 
-            --color-shadow: rgba(0, 0, 0, 0.05);
         }
 
+        /* RESET & BASE STYLES - Dibuat minimal */
         body {
-            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: sans-serif; 
             background-color: var(--color-background);
             color: var(--color-text);
-            padding: 10px; /* Padding dikurangi untuk sempit */
+            padding: 0; /* Ubah padding body menjadi 0 */
             margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            /* 💡 PENCEGAHAN SCROLL BAR HORIZONTAL UTAMA */
+            overflow-x: hidden; 
         }
 
         .search-container {
             width: 100%;
-            max-width: 900px; 
-            background-color: #DCEEFF;
-            border-radius: 12px;
-            padding: 20px; /* Padding dikurangi untuk sempit */
+            /* Pastikan elemen ini tidak melebihi viewport */
+            box-sizing: border-box; 
+            padding: 10px; /* Tambahkan sedikit padding di sini */
+            max-width: 900px;
+            margin: 0 auto; /* Tengah */
         }
 
         h2 {
             color: var(--color-primary-dark);
-            /* PERUBAHAN: Kapital semua dan Tebal */
             font-weight: 700; 
             text-transform: uppercase; 
-            margin-top: 0;
-            padding-bottom: 15px;
+            margin: 0 0 10px 0;
+            padding-bottom: 5px;
             border-bottom: 1px solid var(--color-border);
-            margin-bottom: 20px;
             text-align: center;
-            font-size: 1.2em; /* Ukuran font H2 dikurangi */
+            font-size: 1.1em; 
         }
         
         #searchBar {
             display: flex;
-            margin-bottom: 20px; /* Margin dikurangi */
+            margin-bottom: 10px;
         }
 
         #searchInput {
             flex-grow: 1;
-            padding: 12px; /* Padding dikurangi */
+            padding: 10px; 
             border: 1px solid var(--color-border);
-            border-radius: 8px;
-            font-size: 1em; 
-            transition: all 0.2s ease-in-out;
+            border-radius: 6px; 
+            font-size: 0.95em; 
         }
 
         #searchInput:focus {
@@ -74,152 +70,109 @@
             outline: none;
         }
 
+        /* BOOK ITEM - Minimalis */
         .book-item {
             background-color: var(--color-card-bg);
-            padding: 12px; /* Padding dikurangi */
-            margin-bottom: 12px; /* Margin dikurangi */
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
-            transition: all 0.3s ease;
+            padding: 10px; 
+            margin-bottom: 8px; 
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
             display: flex;
             align-items: center; 
-            gap: 15px; /* Jarak dikurangi */
+            gap: 10px; 
             border: 1px solid var(--color-border); 
         }
 
-        .book-item:hover {
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-            transform: translateY(-2px); 
-            border-color: var(--color-primary);
-        }
-
         .book-cover {
-            width: 45px; /* Ukuran cover dikurangi */
-            height: 65px; /* Ukuran cover dikurangi */
-            border-radius: 3px;
-            background: linear-gradient(to bottom, var(--color-primary), var(--color-primary-dark));
-            box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.2); 
+            width: 35px; 
+            height: 55px; 
+            border-radius: 2px;
+            background: var(--color-primary-dark);
             flex-shrink: 0; 
             position: relative;
         }
-
+        
         .book-cover::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 3px; /* Posisi spine dikurangi */
-            width: 2px;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 1px;
+            content: none;
         }
 
         .book-info { 
             flex-grow: 1; 
-            display: flex;
-            flex-direction: column; 
         }
         
         .book-info h3 {
-            color: var(--color-text); 
-            margin: 0 0 3px 0; /* Margin dikurangi */
-            font-size: 1.1em; /* Ukuran font dikurangi */
+            margin: 0 0 2px 0; 
+            font-size: 1em; 
             font-weight: 600;
         }
 
         .book-info .author-text {
             color: var(--color-text-light); 
-            margin: 0 0 5px 0; /* Margin dikurangi */
+            margin: 0 0 4px 0; 
             font-style: italic;
-            font-size: 0.9em; /* Ukuran font dikurangi */
+            font-size: 0.8em; 
         }
 
         .book-info .location-bar {
-            margin-top: 5px;
-            font-size: 0.85em; /* Ukuran font dikurangi */
+            margin-top: 4px;
+            font-size: 0.75em; 
             color: var(--color-text-light);
             border-top: 1px dashed var(--color-border);
-            padding-top: 5px; /* Padding dikurangi */
+            padding-top: 4px; 
             display: flex; 
-            gap: 10px; /* Jarak dikurangi */
-            flex-wrap: wrap; /* Izinkan bungkus pada layar sangat kecil */
+            gap: 8px;
+            flex-wrap: wrap; 
         }
         
         .location-bar .loc-data, .location-bar .copy-data {
             font-weight: 600;
             color: var(--color-primary-dark);
             background-color: #DCEEFF; 
-            padding: 2px 6px; /* Padding dikurangi */
-            border-radius: 4px;
+            padding: 1px 4px; 
+            border-radius: 3px;
         }
         
         .location-bar .copy-data {
             color: var(--color-text);
             font-weight: 500;
-            background-color: #f0f0f0; /* Beri warna netral */
+            background-color: #f0f0f0; 
         }
 
         .message { 
-            margin-top: 10px; /* Margin dikurangi */
-            padding: 15px; 
-            border-radius: 8px; 
+            margin-top: 10px; 
+            padding: 10px; 
+            border-radius: 6px; 
             font-weight: 500;
+            font-size: 0.9em;
         }
         .info { 
             background-color: #DCEEFF; 
             color: var(--color-primary-dark); 
-            border-left: 5px solid var(--color-primary); 
+            border-left: 4px solid var(--color-primary); 
         }
 
         /* ------------------------------------------- */
-        /* MEDIA QUERY UNTUK LAYAR SEMPIT (Mobile)     */
+        /* MEDIA QUERY: OPTIMASI UNTUK LAYAR SANGAT KECIL (<400px) */
         /* ------------------------------------------- */
-        @media (max-width: 600px) {
-            body {
-                padding: 5px;
-            }
+        @media (max-width: 400px) {
             
-            .search-container {
-                padding: 15px;
-                border-radius: 0; /* Opsional: hilangkan radius di layar penuh */
-            }
-
-            h2 {
-                font-size: 1em;
-            }
-
-            #searchInput {
-                padding: 10px;
-                font-size: 0.9em;
-            }
-
             .book-item {
-                /* Tata letak diubah menjadi kolom pada layar sempit */
                 flex-direction: column; 
                 align-items: flex-start;
-                padding: 15px 10px;
+                padding: 8px;
             }
 
             .book-cover {
-                margin-bottom: 10px;
+                margin-bottom: 5px;
             }
 
             .book-info {
                 width: 100%;
             }
-
-            .book-info h3 {
-                font-size: 1.15em;
-            }
-
-            .book-info .author-text {
-                font-size: 0.9em;
-            }
             
             .book-info .location-bar {
-                flex-direction: column; /* Lokasi dan eksemplar di baris terpisah */
-                gap: 5px;
-                width: 100%;
+                flex-direction: column; 
+                gap: 4px;
             }
         }
     </style>
@@ -227,17 +180,17 @@
 <body>
 
     <div class="search-container">
-        <h2>Pencarian Koleksi Buku Digital</h2> 
+        <h2>Cari Buku</h2> 
 
         <div id="searchBar">
-            <input type="text" id="searchInput" placeholder="Ketik Judul atau Pengarang untuk Pencarian Instan" onkeyup="window.handleSearch()">
+            <input type="text" id="searchInput" placeholder="Ketik Judul atau Pengarang" onkeyup="window.handleSearch()">
         </div>
         
         <div id="results">
             <p class="info" id="initialMessage">⏳ Mempersiapkan data...</p>
         </div>
         
-        </div>
+    </div>
 
     <script>
         let allBooks = []; 
@@ -245,7 +198,7 @@
         const initialMessageElement = document.getElementById('initialMessage');
         
         // ----------------------------------------------------------------------
-        // A. FIREBASE CONFIGURATION & INITIALIZATION (v8 KLASIK)
+        // A. FIREBASE CONFIGURATION & INITIALIZATION
         // ----------------------------------------------------------------------
         const firebaseConfig = {
             // GANTI DENGAN KUNCI ANDA YANG ASLI!
@@ -268,12 +221,15 @@
         // ----------------------------------------------------------------------
 
         function showMessage(elementId, message, type) {
-            const element = document.getElementById(elementId);
-            if (!element) return;
+            const resultsDiv = document.getElementById('results');
+            if (!resultsDiv) return;
+
+            resultsDiv.innerHTML = ''; 
             
+            const element = document.createElement('p');
             element.textContent = message;
             element.className = 'message ' + type;
-            element.style.display = 'block'; 
+            resultsDiv.appendChild(element); 
         }
 
         function clearInitialMessage() {
@@ -283,7 +239,7 @@
         }
         
         // ----------------------------------------------------------------------
-        // C. LOGIKA CACHE & LOAD DATA (Dibersihkan)
+        // C. LOGIKA CACHE & LOAD DATA
         // ----------------------------------------------------------------------
 
         function processBooksData(snapshot) {
@@ -306,14 +262,8 @@
             return books;
         }
 
-        /**
-         * Mengambil data buku dari Firebase dan menyimpannya ke LocalStorage (Silent Update).
-         */
         async function loadAndCacheBooks() {
-            // Ubah pesan loading sementara menjadi latar belakang
-            if (allBooks.length > 0) {
-                 // Tidak ada pesan saat memperbarui cache di latar belakang
-            } else if (initialMessageElement) {
+            if (allBooks.length === 0 && initialMessageElement) {
                 initialMessageElement.textContent = '⏳ Memuat data dari Firebase...';
             }
 
@@ -321,38 +271,28 @@
                 const snapshot = await booksRef.once('value');
                 const newBooks = processBooksData(snapshot);
                 
-                // Simpan ke LocalStorage dan update data global
                 localStorage.setItem(CACHE_KEY, JSON.stringify(newBooks));
                 allBooks = newBooks;
                 
-                // Hapus pesan loading dan refresh hasil
                 clearInitialMessage();
                 handleSearch(true); 
 
             } catch (error) {
                 console.error("Gagal memuat data buku dari Firebase:", error);
-                // Biarkan cache lama tetap ada jika ada, jangan tampilkan pesan error yang mengganggu
             }
         }
         
-        /**
-         * Memuat data buku dari LocalStorage jika tersedia (Instan).
-         */
         function loadBooksFromCache() {
             const cachedData = localStorage.getItem(CACHE_KEY);
             
             if (cachedData) {
                 try {
                     allBooks = JSON.parse(cachedData);
-                    
-                    // Langsung hapus pesan loading, siap untuk pencarian instan
                     clearInitialMessage();
                     
-                    // Mulai pencarian data terbaru dari Firebase di latar belakang
                     loadAndCacheBooks(); 
                     return true;
                 } catch (e) {
-                    console.error("Cache rusak. Memuat data baru.", e);
                     localStorage.removeItem(CACHE_KEY);
                     return false;
                 }
@@ -385,18 +325,16 @@
             const searchInput = document.getElementById('searchInput');
             const searchText = searchInput ? searchInput.value.trim() : '';
 
-            // Jika data belum termuat, jangan tampilkan pesan error, cukup tunggu
             if (allBooks.length === 0) {
                  showMessage('results', 'Menunggu data dimuat...', 'info');
                  return;
             }
 
             if (searchText.length > 0 && books.length === 0) {
-                showMessage('results', `Maaf, tidak ada buku yang cocok dengan "${searchText}".`, 'info');
+                showMessage('results', `Tidak ditemukan: "${searchText}".`, 'info');
                 return;
             } else if (searchText.length === 0) {
-                // Pesan default yang bersih saat kotak pencarian kosong
-                showMessage('results', `Masukkan Judul atau Pengarang untuk memulai pencarian di ${allBooks.length} buku.`, 'info');
+                showMessage('results', `Cari di ${allBooks.length} buku.`, 'info');
                 return;
             }
 
@@ -413,7 +351,7 @@
                         <h3>${book.title || 'Judul Kosong'}</h3>
                         <p class="author-text">Oleh: ${book.author || 'Tidak Diketahui'}</p>
                         <div class="location-bar">
-                            <span class="loc-data">Blok: ${bookLocation}</span>
+                            <span class="loc-data">Blok/Rak: ${bookLocation}</span>
                             <span class="copy-data">Eksemplar: ${book.copy || '-'}</span>
                         </div>
                     </div>
@@ -448,10 +386,6 @@
             const loadedFromCache = loadBooksFromCache();
             
             if (!loadedFromCache) {
-                // Jika tidak ada cache, tampilkan pesan loading yang lebih jelas
-                if (initialMessageElement) {
-                    initialMessageElement.textContent = '⏳ Tidak ada data tersimpan. Memuat data pertama kali (mungkin butuh waktu sebentar)...';
-                }
                 loadAndCacheBooks();
             }
         });
