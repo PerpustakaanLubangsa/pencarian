@@ -3,176 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencarian Buku Sederhana</title>
+    <title>Pencarian Buku Modern</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
-        /* SKEMA WARNA: CYAN ACCENT */
+        /* 1. IMPORT FONT EKSTERNAL MODERN */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        /* SKEMA WARNA: HIJAU MONOKROMATIK */
         :root {
-            --color-primary: #00BCD4; 
-            --color-primary-dark: #0097A7; 
-            --color-text: #263238;    
-            --color-text-light: #546E7A; 
-            --color-background: #DCEEFF; 
+            --color-primary: #4CAF50;     /* Green Utama (Medium) */
+            --color-primary-dark: #388E3C;  /* Green Gelap */
+            --color-accent: #66BB6A;      /* Green Sedang (Aksen) */
+            --color-text: #263238;        /* Teks Sangat Gelap */
+            --color-text-light: #757575;  /* Abu-abu Netral */
+            --color-background: #F8F9FA;  /* Background Putih Sangat Pucat */
             --color-card-bg: #ffffff;
-            --color-border: #cfd8dc; 
+            --color-border: #E0E0E0;      /* Batas Sangat Lembut */
+            --color-box-shadow: rgba(40, 50, 70, 0.08); /* Bayangan Soft */
+            --color-accent-bg: #E8F5E9;   /* Green Sangat Pucat untuk Badge */
         }
 
-        /* RESET & BASE STYLES - Dibuat minimal */
+        /* 2. BASE STYLES & LAYOUT */
         body {
-            font-family: sans-serif; 
+            font-family: 'Inter', sans-serif; 
             background-color: var(--color-background);
             color: var(--color-text);
-            padding: 0; /* Ubah padding body menjadi 0 */
+            padding: 0; 
             margin: 0;
-            /* 💡 PENCEGAHAN SCROLL BAR HORIZONTAL UTAMA */
             overflow-x: hidden; 
         }
 
         .search-container {
             width: 100%;
-            /* Pastikan elemen ini tidak melebihi viewport */
             box-sizing: border-box; 
-            padding: 10px; /* Tambahkan sedikit padding di sini */
-            max-width: 900px;
-            margin: 0 auto; /* Tengah */
+            padding: 25px 15px; 
+            max-width: 800px; 
+            margin: 0 auto; 
         }
 
         h2 {
             color: var(--color-primary-dark);
             font-weight: 700; 
-            text-transform: uppercase; 
-            margin: 0 0 10px 0;
+            text-transform: none; 
+            margin: 0 0 25px 0; 
             padding-bottom: 5px;
-            border-bottom: 1px solid var(--color-border);
-            text-align: center;
-            font-size: 1.1em; 
+            /* Garis bawah utama menggunakan warna aksen hijau */
+            border-bottom: 3px solid var(--color-accent); 
+            text-align: left; 
+            font-size: 1.5em; 
+            letter-spacing: -0.5px;
         }
         
         #searchBar {
             display: flex;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
         #searchInput {
             flex-grow: 1;
-            padding: 10px; 
+            padding: 14px 18px; 
             border: 1px solid var(--color-border);
-            border-radius: 6px; 
-            font-size: 0.95em; 
+            border-radius: 12px; 
+            font-size: 1em; 
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         #searchInput:focus {
             border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.2); 
+            box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.15); /* Bayangan dari Green */
             outline: none;
         }
 
-        /* BOOK ITEM - Minimalis */
+        /* 3. BOOK ITEM - GAYA MODERN */
         .book-item {
             background-color: var(--color-card-bg);
-            padding: 10px; 
-            margin-bottom: 8px; 
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
+            padding: 18px; 
+            margin-bottom: 12px; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 15px var(--color-box-shadow); 
             display: flex;
             align-items: center; 
-            gap: 10px; 
-            border: 1px solid var(--color-border); 
+            gap: 20px; 
+            border: none;
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            cursor: pointer;
+            /* Garis sisi aksen utama */
+            border-left: 5px solid var(--color-primary);
+        }
+
+        .book-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(40, 50, 70, 0.15);
         }
 
         .book-cover {
-            width: 35px; 
-            height: 55px; 
-            border-radius: 2px;
-            background: var(--color-primary-dark);
+            width: 50px; 
+            height: 75px; 
+            border-radius: 6px;
+            /* Gradien pada sampul menggunakan Green */
+            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
             flex-shrink: 0; 
             position: relative;
-        }
-        
-        .book-cover::after {
-            content: none;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
         }
 
+        /* 4. BOOK INFO & DATA */
         .book-info { 
             flex-grow: 1; 
         }
         
         .book-info h3 {
-            margin: 0 0 2px 0; 
-            font-size: 1em; 
-            font-weight: 600;
+            margin: 0 0 3px 0; 
+            font-size: 1.15em; 
+            font-weight: 700; 
+            color: var(--color-primary-dark); /* Judul menggunakan Green Gelap */
+            line-height: 1.3;
         }
 
         .book-info .author-text {
             color: var(--color-text-light); 
-            margin: 0 0 4px 0; 
-            font-style: italic;
-            font-size: 0.8em; 
+            margin: 0 0 10px 0; 
+            font-style: normal;
+            font-weight: 400;
+            font-size: 0.9em; 
         }
 
         .book-info .location-bar {
-            margin-top: 4px;
-            font-size: 0.75em; 
-            color: var(--color-text-light);
-            border-top: 1px dashed var(--color-border);
-            padding-top: 4px; 
+            margin-top: 10px;
+            font-size: 0.85em; 
+            color: var(--color-text);
+            border-top: 1px solid var(--color-border);
+            padding-top: 8px; 
             display: flex; 
-            gap: 8px;
+            gap: 12px;
             flex-wrap: wrap; 
+            font-weight: 600;
         }
         
-        .location-bar .loc-data, .location-bar .copy-data {
-            font-weight: 600;
-            color: var(--color-primary-dark);
-            background-color: #DCEEFF; 
-            padding: 1px 4px; 
-            border-radius: 3px;
+        .location-bar .loc-data {
+            font-weight: 700;
+            color: white; 
+            /* Badge utama menggunakan warna utama Green */
+            background-color: var(--color-primary); 
+            padding: 3px 8px; 
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         .location-bar .copy-data {
-            color: var(--color-text);
             font-weight: 500;
-            background-color: #f0f0f0; 
+            color: var(--color-primary-dark);
+            background-color: var(--color-accent-bg); /* Latar belakang Green pucat */
+            padding: 3px 8px; 
+            border-radius: 6px;
         }
 
+        /* 5. PESAN STATUS */
         .message { 
-            margin-top: 10px; 
-            padding: 10px; 
-            border-radius: 6px; 
+            margin-top: 20px; 
+            padding: 15px; 
+            border-radius: 10px; 
             font-weight: 500;
-            font-size: 0.9em;
+            font-size: 1em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
         }
         .info { 
-            background-color: #DCEEFF; 
+            background-color: var(--color-card-bg); 
             color: var(--color-primary-dark); 
-            border-left: 4px solid var(--color-primary); 
+            /* Aksen menggunakan warna utama Green */
+            border-left: 5px solid var(--color-primary); 
         }
 
-        /* ------------------------------------------- */
-        /* MEDIA QUERY: OPTIMASI UNTUK LAYAR SANGAT KECIL (<400px) */
-        /* ------------------------------------------- */
-        @media (max-width: 400px) {
+        /* 6. RESPONSIVENESS (MOBILE) */
+        @media (max-width: 500px) {
             
+            .search-container {
+                padding: 15px 10px;
+            }
+
             .book-item {
                 flex-direction: column; 
                 align-items: flex-start;
-                padding: 8px;
-            }
-
-            .book-cover {
-                margin-bottom: 5px;
+                padding: 15px;
+                gap: 10px;
+                border-left: 5px solid var(--color-primary); 
             }
 
             .book-info {
                 width: 100%;
             }
             
+            .book-cover {
+                margin-bottom: 5px;
+            }
+
             .book-info .location-bar {
                 flex-direction: column; 
-                gap: 4px;
+                gap: 6px;
             }
         }
     </style>
@@ -180,7 +211,7 @@
 <body>
 
     <div class="search-container">
-        <h2>Cari Buku</h2> 
+        <h2>Pencarian Data Buku</h2> 
 
         <div id="searchBar">
             <input type="text" id="searchInput" placeholder="Ketik Judul atau Pengarang" onkeyup="window.handleSearch()">
@@ -200,8 +231,8 @@
         // ----------------------------------------------------------------------
         // A. FIREBASE CONFIGURATION & INITIALIZATION
         // ----------------------------------------------------------------------
+        // **PERINGATAN:** Ganti konfigurasi di bawah ini dengan detail Firebase Anda yang asli.
         const firebaseConfig = {
-            // GANTI DENGAN KUNCI ANDA YANG ASLI!
             apiKey: "AIzaSyC9flInCggKcfWril97oSKGRQoHIr-UAXU", 
             authDomain: "databuku-2c3eb.firebaseapp.com",
             databaseURL: "https://databuku-2c3eb-default-rtdb.firebaseio.com",
@@ -290,6 +321,7 @@
                     allBooks = JSON.parse(cachedData);
                     clearInitialMessage();
                     
+                    // Memuat data dari cache, lalu update di latar belakang
                     loadAndCacheBooks(); 
                     return true;
                 } catch (e) {
@@ -374,6 +406,7 @@
             if (forceRun) {
                 runSearch();
             } else {
+                // Penundaan kecil untuk mencegah pencarian berlebihan saat mengetik
                 searchTimeout = setTimeout(runSearch, 50); 
             }
         }
@@ -386,8 +419,11 @@
             const loadedFromCache = loadBooksFromCache();
             
             if (!loadedFromCache) {
+                // Jika cache gagal, muat langsung dari Firebase
                 loadAndCacheBooks();
             }
+            // Jalankan pencarian awal (untuk menampilkan pesan "Cari di X buku")
+            handleSearch(true);
         });
 
     </script>
