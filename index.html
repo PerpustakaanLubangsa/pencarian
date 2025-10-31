@@ -1,436 +1,416 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencarian Buku Modern | Dark Cyan</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<meta charset="UTF-8">
+<title>Pencarian Buku - Perpustakaan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+/* --- BOX-SIZING UNIVERSAL --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
-    <style>
-        /* 1. IMPORT FONT EKSTERNAL MODERN */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+/* --- VARIABEL DASAR --- */
+:root {
+    --primary-color: #00bcd4;     /* Biru terang konsisten */
+    --text-dark: #006064;         /* Warna teks utama */
+    --bg-main: #fcfcfc;           /* PUTIH PUCAT (Off-White) untuk container utama */
+    --bg-body: #f7f9fc;           /* Abu-abu muda sangat lembut untuk body */
+    --border-light: #e0e0e0;      /* Border yang lembut */
+    --warning-orange: #f39c12; 
+    --success-green: #2ecc71; 
+}
 
-        /* ------------------------------------------------------------------ */
-        /* SKEMA WARNA BARU: DARK CYAN */
-        /* ------------------------------------------------------------------ */
-        :root {
-            --color-primary: #00838F;     /* Dark Cyan 800 (Primary/Accent) */
-            --color-primary-dark: #006064;  /* Dark Cyan 900 (Gelap/Text Heading) */
-            --color-accent: #00838F;      /* Dark Cyan 800 (Aksen) */
-            --color-text: #263238;        /* Teks Sangat Gelap (Dibiarkan) */
-            --color-text-light: #757575;  /* Abu-abu Netral (Dibiarkan) */
-            --color-background: #F8F9FA;  /* Background Putih Sangat Pucat (Dibiarkan) */
-            --color-card-bg: #ffffff;     /* (Dibiarkan) */
-            --color-border: #E0E0E0;      /* Batas Sangat Lembut (Dibiarkan) */
-            --color-box-shadow: rgba(40, 50, 70, 0.08); /* Bayangan Soft (Dibiarkan) */
-            --color-accent-bg: #E0F7FA;   /* Pale Cyan (Sangat Pucat untuk Badge) */
-        }
-        /* ------------------------------------------------------------------ */
+/* 1. Latar Belakang Body */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background: var(--bg-body); /* Background abu-abu muda */
+    margin: 0; 
+    padding: 20px 15px; 
+    color: var(--text-dark); 
+}
 
-        /* 2. BASE STYLES & LAYOUT */
-        body {
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--color-background);
-            color: var(--color-text);
-            padding: 0; 
-            margin: 0;
-            overflow-x: hidden; 
-        }
+/* 2. Container Pembungkus */
+.container {
+    max-width: 1200px; /* Lebar maksimum container */
+    margin: auto;
+    /* Optional: Memberikan background off-white untuk kontras yang nyaman */
+    background: var(--bg-body);
+    padding: 20px;
+    border-radius: 12px;
 
-        .search-container {
-            width: 100%;
-            box-sizing: border-box; 
-            padding: 25px 15px; 
-            max-width: 800px; 
-            margin: 0 auto; 
-        }
+}
 
-        h2 {
-            color: var(--color-primary-dark);
-            font-weight: 700; 
-            text-transform: none; 
-            margin: 0 0 25px 0; 
-            padding-bottom: 5px;
-            /* Garis bawah utama menggunakan warna aksen Dark Cyan */
-            border-bottom: 3px solid var(--color-accent); 
-            text-align: left; 
-            font-size: 1.5em; 
-            letter-spacing: -0.5px;
-        }
-        
-        #searchBar {
-            display: flex;
-            margin-bottom: 20px;
-        }
+/* --- Area Pencarian --- */
+#searchContainer { 
+    margin-bottom: 25px; 
+    text-align: center; 
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+#searchInput {
+    padding: 12px 20px; 
+    border: 1px solid var(--border-light); /* Border lebih lembut */
+    border-radius: 30px; 
+    width: 100%; 
+    font-size: 1.1em; 
+    transition: border-color 0.3s, box-shadow 0.3s;
+    outline: none;
+    background-color: #ffffff; /* Pastikan input tetap putih */
+}
+#searchInput:focus { 
+    border-color: var(--primary-color); 
+    box-shadow: 0 0 8px rgba(0, 188, 212, 0.3); 
+}
 
-        #searchInput {
-            flex-grow: 1;
-            padding: 14px 18px; 
-            border: 1px solid var(--color-border);
-            border-radius: 12px; 
-            font-size: 1em; 
-            font-weight: 400;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
+/* --- Container Hasil Buku --- */
+#bukuContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 20px; 
+    padding: 0;
+}
 
-        #searchInput:focus {
-            border-color: var(--color-primary);
-            /* Bayangan menggunakan Dark Cyan */
-            box-shadow: 0 0 0 4px rgba(0, 131, 143, 0.15); 
-            outline: none;
-        }
+/* 3. Gaya Card Buku */
+.buku-card {
+    background: #ffffff; /* Card tetap putih murni */
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08); /* Shadow sedikit lebih halus */
+    padding: 15px; 
+    transition: box-shadow 0.3s, transform 0.2s; 
+    border-left: 5px solid var(--primary-color); 
+    position: relative;
+    display: flex; 
+    flex-direction: column;
+}
+.buku-card:hover {
+    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
+    transform: translateY(-2px); 
+}
 
-        /* 3. BOOK ITEM - GAYA MODERN */
-        .book-item {
-            background-color: var(--color-card-bg);
-            padding: 18px; 
-            margin-bottom: 12px; 
-            border-radius: 16px; 
-            box-shadow: 0 8px 15px var(--color-box-shadow); 
-            display: flex;
-            align-items: center; 
-            gap: 20px; 
-            border: none;
-            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-            cursor: pointer;
-            /* Garis sisi aksen utama Dark Cyan */
-            border-left: 5px solid var(--color-primary);
-        }
+/* Gaya khusus jika sedang dipinjam */
+.buku-card.dipinjam {
+    border-left: 5px solid var(--warning-orange);
+    opacity: 0.98;
+}
 
-        .book-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(40, 50, 70, 0.15);
-        }
 
-        .book-cover {
-            width: 50px; 
-            height: 75px; 
-            border-radius: 6px;
-            /* Gradien pada sampul menggunakan Dark Cyan */
-            background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
-            flex-shrink: 0; 
-            position: relative;
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
-        }
+.card-title {
+    font-size: 1.2em; 
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+}
 
-        /* 4. BOOK INFO & DATA */
-        .book-info { 
-            flex-grow: 1; 
-        }
-        
-        .book-info h3 {
-            margin: 0 0 3px 0; 
-            font-size: 1.15em; 
-            font-weight: 700; 
-            color: var(--color-primary-dark); /* Judul menggunakan Dark Cyan Gelap */
-            line-height: 1.3;
-        }
+.card-title i {
+    flex-shrink: 0;
+    margin-right: 10px;
+    color: var(--primary-color);
+    font-size: 1.3em;
+}
 
-        .book-info .author-text {
-            color: var(--color-text-light); 
-            margin: 0 0 10px 0; 
-            font-style: normal;
-            font-weight: 400;
-            font-size: 0.9em; 
-        }
+.card-content {
+    flex-grow: 1; 
+}
 
-        .book-info .location-bar {
-            margin-top: 10px;
-            font-size: 0.85em; 
-            color: var(--color-text);
-            border-top: 1px solid var(--color-border);
-            padding-top: 8px; 
-            display: flex; 
-            gap: 12px;
-            flex-wrap: wrap; 
-            font-weight: 600;
-        }
-        
-        .location-bar .loc-data {
-            font-weight: 700;
-            color: white; 
-            /* Badge utama menggunakan warna utama Dark Cyan */
-            background-color: var(--color-primary); 
-            padding: 3px 8px; 
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .location-bar .copy-data {
-            font-weight: 500;
-            color: var(--color-primary-dark);
-            /* Latar belakang Dark Cyan pucat */
-            background-color: var(--color-accent-bg); 
-            padding: 3px 8px; 
-            border-radius: 6px;
-        }
+.card-detail {
+    margin-bottom: 8px; 
+    padding: 6px 0; 
+    display: flex; 
+    align-items: center;
+    font-size: 0.95em;
+    border-top: 1px dashed #eee;
+}
 
-        /* 5. PESAN STATUS */
-        .message { 
-            margin-top: 20px; 
-            padding: 15px; 
-            border-radius: 10px; 
-            font-weight: 500;
-            font-size: 1em;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-        }
-        .info { 
-            background-color: var(--color-card-bg); 
-            color: var(--color-primary-dark); 
-            /* Aksen menggunakan warna utama Dark Cyan */
-            border-left: 5px solid var(--color-primary); 
-        }
+.card-detail:first-of-type {
+    border-top: none; 
+}
 
-        /* 6. RESPONSIVENESS (MOBILE) */
-        @media (max-width: 500px) {
-            
-            .search-container {
-                padding: 15px 10px;
-            }
+.card-detail i {
+    flex-shrink: 0;
+    margin-right: 8px;
+    color: #7f8c8d;
+    width: 20px; 
+    text-align: center;
+}
 
-            .book-item {
-                flex-direction: column; 
-                align-items: flex-start;
-                padding: 15px;
-                gap: 10px;
-                border-left: 5px solid var(--color-primary); 
-            }
+.detail-label {
+    font-weight: 600;
+    color: #34495e;
+    margin-right: 5px;
+}
 
-            .book-info {
-                width: 100%;
-            }
-            
-            .book-cover {
-                margin-bottom: 5px;
-            }
+.detail-value {
+    color: var(--text-dark);
+}
 
-            .book-info .location-bar {
-                flex-direction: column; 
-                gap: 6px;
-            }
-        }
-    </style>
+/* --- Status Ketersediaan di Bagian Bawah --- */
+.card-status {
+    margin-top: 15px; 
+    padding-top: 10px;
+    border-top: 2px solid var(--border-light);
+    text-align: center;
+    font-weight: 700;
+    padding-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.status-available {
+    color: var(--success-green);
+}
+
+.status-borrowed {
+    color: var(--warning-orange);
+}
+
+
+/* --- Pesan Status (Loading/Tidak Ditemukan) --- */
+/* Elemen statusMessage masih dipertahankan di CSS jika sewaktu-waktu dibutuhkan, 
+   namun tidak digunakan secara default di HTML dan JS yang dimodifikasi. */
+#statusMessage {
+    text-align: center;
+    padding: 20px;
+    color: #34495e;
+    font-size: 1.1em;
+}
+
+</style>
 </head>
 <body>
 
-    <div class="search-container">
-        <h2>Pencarian Data Buku</h2> 
-
-        <div id="searchBar">
-            <input type="text" id="searchInput" placeholder="Ketik Judul atau Pengarang" onkeyup="window.handleSearch()">
-        </div>
-        
-        <div id="results">
-            <p class="info" id="initialMessage">⏳ Mempersiapkan data...</p>
-        </div>
-        
+<div class="container">
+    <div id="searchContainer">
+        <input type="text" id="searchInput" placeholder="Cari Judul, Pengarang, atau No. Inventaris..." oninput="filterBooks()" autocomplete="off">
     </div>
 
-    <script>
-        let allBooks = []; 
-        const CACHE_KEY = 'library_books_cache';
-        const initialMessageElement = document.getElementById('initialMessage');
-        
-        // ----------------------------------------------------------------------
-        // A. FIREBASE CONFIGURATION & INITIALIZATION
-        // ----------------------------------------------------------------------
-        // **PERINGATAN:** Ganti konfigurasi di bawah ini dengan detail Firebase Anda yang asli.
-        const firebaseConfig = {
-            apiKey: "AIzaSyC9flInCggKcfWril97oSKGRQoHIr-UAXU", 
-            authDomain: "databuku-2c3eb.firebaseapp.com",
-            databaseURL: "https://databuku-2c3eb-default-rtdb.firebaseio.com",
-            projectId: "databuku-2c3eb",
-            storageBucket: "databuku-2c3eb.firebasestorage.app",
-            messagingSenderId: "875386002451",
-            appId: "1:875386002451:web:cdf49ba64e5246e47773e6"
-        };
+    <div id="bukuContainer">
+        </div>
+</div>
 
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const booksRef = database.ref('books'); 
+<script>
+// --- Konfigurasi Firebase ---
+const firebaseConfig = {
+    // Pastikan ini konfigurasi yang benar dari file Anda
+    apiKey: "AIzaSyByw2om-sKHqgCWBDcE7FEtONoUoJbn9M",
+    authDomain: "traying-29bf4.firebaseapp.com",
+    databaseURL: "https://traying-29bf4-default-rtdb.firebaseio.com",
+    projectId: "traying-29bf4",
+    storageBucket: "traying-29bf4.appspot.com",
+    messagingSenderId: "42080663883",
+    appId: "1:42080663883:web:58f28d5d1164204457d030"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// --- PATH KONSISTEN ---
+const BUKU_PATH = "buku_v2"; 
+const PEMINJAMAN_PATH = "peminjaman_v2"; 
+
+// --- STATE GLOBAL & ELEMEN ---
+let allBukuData = {};
+let activePeminjamanInvs = new Set(); 
+const bukuContainer = document.getElementById("bukuContainer");
+const searchInput = document.getElementById("searchInput");
+// statusMessage tetap didefinisikan untuk mencegah error, tapi tidak dipanggil
+const statusMessage = document.getElementById('statusMessage'); 
 
 
-        // ----------------------------------------------------------------------
-        // B. FUNGSI UTILITAS UI
-        // ----------------------------------------------------------------------
+// --- HELPER FUNCTIONS ---
 
-        function showMessage(elementId, message, type) {
-            const resultsDiv = document.getElementById('results');
-            if (!resultsDiv) return;
+// showStatus() dipertahankan tapi tidak akan terpanggil lagi di filterBooks()
+function showStatus(message = '', icon = '', isVisible = true) {
+    // Perlu dicek apakah statusMessage ada karena sudah dihapus dari HTML
+    if (!statusMessage) return; 
 
-            resultsDiv.innerHTML = ''; 
-            
-            const element = document.createElement('p');
-            element.textContent = message;
-            element.className = 'message ' + type;
-            resultsDiv.appendChild(element); 
-        }
+    if (isVisible) {
+        statusMessage.innerHTML = `<i class="${icon}" style="margin-right: 10px; color: var(--primary-color);"></i> ${message}`;
+        statusMessage.style.display = 'block';
+        bukuContainer.style.display = 'none'; 
+    } else {
+        statusMessage.style.display = 'none';
+        bukuContainer.style.display = 'grid'; 
+    }
+}
 
-        function clearInitialMessage() {
-            if (initialMessageElement) {
-                initialMessageElement.remove();
-            }
-        }
-        
-        // ----------------------------------------------------------------------
-        // C. LOGIKA CACHE & LOAD DATA
-        // ----------------------------------------------------------------------
 
-        function processBooksData(snapshot) {
-            const books = [];
-            if (snapshot.exists()) {
-                snapshot.forEach((childSnapshot) => {
-                    const book = childSnapshot.val();
-                    books.push({
-                        id: childSnapshot.key,
-                        title: book.title || '',
-                        author: book.author || '',
-                        title_lower: (book.title || '').toLowerCase(),
-                        author_lower: (book.author || '').toLowerCase(),
-                        block: book.block || '-',
-                        shelf: book.shelf || '-',
-                        copy: book.copy || '-'
-                    });
+// 1. Ambil Data Peminjaman Aktif (Hanya Inventarisnya)
+function fetchPeminjamanStatus() {
+    return new Promise((resolve) => {
+        db.ref(PEMINJAMAN_PATH).once("value", snap => {
+            activePeminjamanInvs.clear();
+            if (snap.exists()) {
+                snap.forEach(child => {
+                    const kodeBuku = child.val().kode; 
+                    if (kodeBuku) {
+                        activePeminjamanInvs.add(kodeBuku);
+                    }
                 });
             }
-            return books;
-        }
-
-        async function loadAndCacheBooks() {
-            if (allBooks.length === 0 && initialMessageElement) {
-                initialMessageElement.textContent = '⏳ Memuat data dari Firebase...';
-            }
-
-            try {
-                const snapshot = await booksRef.once('value');
-                const newBooks = processBooksData(snapshot);
-                
-                localStorage.setItem(CACHE_KEY, JSON.stringify(newBooks));
-                allBooks = newBooks;
-                
-                clearInitialMessage();
-                handleSearch(true); 
-
-            } catch (error) {
-                console.error("Gagal memuat data buku dari Firebase:", error);
-            }
-        }
-        
-        function loadBooksFromCache() {
-            const cachedData = localStorage.getItem(CACHE_KEY);
-            
-            if (cachedData) {
-                try {
-                    allBooks = JSON.parse(cachedData);
-                    clearInitialMessage();
-                    
-                    // Memuat data dari cache, lalu update di latar belakang
-                    loadAndCacheBooks(); 
-                    return true;
-                } catch (e) {
-                    localStorage.removeItem(CACHE_KEY);
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
-
-        // ----------------------------------------------------------------------
-        // D. FUNGSI PENCARIAN & DISPLAY
-        // ----------------------------------------------------------------------
-        
-        function searchBooks(searchText) {
-            const searchTextLower = searchText.toLowerCase().trim();
-            if (searchTextLower.length === 0) return [];
-            
-            return allBooks.filter(book => {
-                const titleMatch = book.title_lower.includes(searchTextLower);
-                const authorMatch = book.author_lower.includes(searchTextLower);
-                
-                return titleMatch || authorMatch;
-            });
-        }
-
-        function displayResults(books) {
-            const resultsDiv = document.getElementById('results');
-            if (!resultsDiv) return;
-            
-            resultsDiv.innerHTML = '';
-            const searchInput = document.getElementById('searchInput');
-            const searchText = searchInput ? searchInput.value.trim() : '';
-
-            if (allBooks.length === 0) {
-                 showMessage('results', 'Menunggu data dimuat...', 'info');
-                 return;
-            }
-
-            if (searchText.length > 0 && books.length === 0) {
-                showMessage('results', `Tidak ditemukan: "${searchText}".`, 'info');
-                return;
-            } else if (searchText.length === 0) {
-                showMessage('results', `Cari di ${allBooks.length} buku.`, 'info');
-                return;
-            }
-
-            // Memasukkan hasil ke DOM
-            books.forEach(book => {
-                const item = document.createElement('div');
-                item.className = 'book-item';
-                
-                const bookLocation = `${book.block || '-'} ${book.shelf || '-'}`;
-                
-                item.innerHTML = `
-                    <div class="book-cover"></div>
-                    <div class="book-info">
-                        <h3>${book.title || 'Judul Kosong'}</h3>
-                        <p class="author-text">Oleh: ${book.author || 'Tidak Diketahui'}</p>
-                        <div class="location-bar">
-                            <span class="loc-data">Blok/Rak: ${bookLocation}</span>
-                            <span class="copy-data">Eksemplar: ${book.copy || '-'}</span>
-                        </div>
-                    </div>
-                `;
-                resultsDiv.appendChild(item);
-            });
-        }
-        
-        let searchTimeout;
-        window.handleSearch = function(forceRun = false) {
-            clearTimeout(searchTimeout);
-            const searchInput = document.getElementById('searchInput');
-            const searchText = searchInput ? searchInput.value.trim() : '';
-            
-            const runSearch = () => {
-                const books = searchBooks(searchText);
-                displayResults(books);
-            };
-
-            if (forceRun) {
-                runSearch();
-            } else {
-                // Penundaan kecil untuk mencegah pencarian berlebihan saat mengetik
-                searchTimeout = setTimeout(runSearch, 50); 
-            }
-        }
-
-        // ----------------------------------------------------------------------
-        // E. STARTUP LOGIC
-        // ----------------------------------------------------------------------
-        
-        window.addEventListener('load', () => {
-            const loadedFromCache = loadBooksFromCache();
-            
-            if (!loadedFromCache) {
-                // Jika cache gagal, muat langsung dari Firebase
-                loadAndCacheBooks();
-            }
-            // Jalankan pencarian awal (untuk menampilkan pesan "Cari di X buku")
-            handleSearch(true);
+            resolve();
         });
+    });
+}
 
-    </script>
+
+// 2. Ambil dan Monitor Data Buku
+function fetchBukuData() {
+    db.ref(BUKU_PATH).on("value", snap => {
+        allBukuData = {};
+        if (snap.exists()) {
+            snap.forEach(child => {
+                allBukuData[child.key] = child.val(); 
+            });
+            filterBooks(); 
+        } else {
+            allBukuData = {};
+            renderCards({}); 
+            // showStatus("Tidak ada data buku yang tersedia.", 'fas fa-inbox', true); // Dihapus/dinonaktifkan
+        }
+    }, error => {
+        console.error("Error loading data from Firebase:", error);
+        // showStatus(`Gagal memuat data: ${error.message}`, 'fas fa-server', true); // Dihapus/dinonaktifkan
+    });
+}
+
+
+// 3. Render Cards ke Halaman
+function renderCards(data) {
+    bukuContainer.innerHTML = "";
+    const keys = Object.keys(data);
+
+    if (keys.length === 0) {
+        const filter = searchInput.value.toLowerCase().trim();
+        
+        if (filter.length >= 2 && Object.keys(allBukuData).length > 0) {
+            // Jika tidak ada hasil untuk 2 huruf ke atas
+            if (statusMessage) {
+                showStatus(`Tidak ditemukan hasil untuk "${filter}".`, 'fas fa-search-minus', true);
+            } else {
+                bukuContainer.innerHTML = `<div style="text-align:center; padding: 20px;">Tidak ditemukan hasil untuk "${filter}".</div>`;
+            }
+        } else if (Object.keys(allBukuData).length > 0 && filter.length < 2) {
+             // KONDISI INI DIATUR HANYA MENGOSONGKAN WADAH SAJA
+             // Tidak menampilkan pesan "Ketik minimal 2 huruf..."
+             showStatus(null, null, false); 
+             bukuContainer.innerHTML = "";
+        }
+        return;
+    }
+    
+    showStatus(null, null, false); 
+
+    for (const inv in data) {
+        const d = data[inv];
+        const card = document.createElement("div");
+        card.className = "buku-card";
+
+        const isDipinjam = activePeminjamanInvs.has(inv);
+        
+        let statusKeterangan, statusClass, statusIcon;
+
+        if (isDipinjam) {
+            card.classList.add('dipinjam');
+            statusKeterangan = 'SEDANG DIPINJAM';
+            statusClass = 'status-borrowed';
+            statusIcon = 'fas fa-times-circle';
+        } else {
+            statusKeterangan = 'TERSEDIA';
+            statusClass = 'status-available';
+            statusIcon = 'fas fa-check-circle';
+        }
+
+        const cardHTML = `
+            <div class="card-content">
+                <h3 class="card-title">
+                    <i class="fas fa-book"></i>
+                    ${d.judul || 'Judul Tidak Tersedia'}
+                </h3>
+                
+                <div class="card-detail">
+                    <i class="fas fa-user-edit"></i>
+                    <span class="detail-label">Pengarang:</span>
+                    <span class="detail-value">${d.pengarang || '-'}</span>
+                </div>
+                
+                <div class="card-detail">
+                    <i class="fas fa-box"></i>
+                    <span class="detail-label">Lokasi:</span>
+                    <span class="detail-value">Blok ${d.blok || '-'} / Rak ${d.rak || '-'}</span>
+                </div>
+                
+                <div class="card-detail">
+                    <i class="fas fa-barcode"></i>
+                    <span class="detail-label">No. Inv:</span>
+                    <span class="detail-value">${inv}</span>
+                </div>
+            </div>
+            
+            <div class="card-status ${statusClass}">
+                <i class="${statusIcon}"></i> ${statusKeterangan}
+            </div>
+        `;
+        
+        card.innerHTML = cardHTML;
+        bukuContainer.appendChild(card);
+    }
+}
+
+
+// 4. Fitur Pencarian (Filtering)
+function filterBooks() {
+    const filter = searchInput.value.toLowerCase().trim();
+    const filteredData = {};
+
+    // Cek apakah filter memiliki minimal 2 karakter
+    if (filter.length < 2) {
+        // HANYA MENGOSONGKAN WADAH SAJA, TIDAK ADA PESAN STATUS
+        renderCards({}); 
+        bukuContainer.innerHTML = ""; // Pastikan wadah kosong
+        showStatus(null, null, false); 
+
+        // Jika input kosong, bahkan tidak perlu menampilkan pesan "Tidak ditemukan hasil"
+        if (filter.length === 0) {
+            bukuContainer.innerHTML = "";
+        }
+        return; 
+    }
+
+    // Jika filter >= 2 karakter, lanjutkan proses filtering
+    for (const inv in allBukuData) {
+        const d = allBukuData[inv];
+        const searchableText = `${d.judul} ${d.pengarang} ${d.blok} ${d.rak} ${inv}`.toLowerCase();
+        
+        if (searchableText.includes(filter)) {
+            filteredData[inv] = d;
+        }
+    }
+    renderCards(filteredData);
+}
+
+// --- INITIALIZATION ---
+window.onload = async () => {
+    // Pesan loading di awal juga dihapus
+    
+    // 1. Ambil status peminjaman dulu
+    await fetchPeminjamanStatus(); 
+    
+    // 2. Kemudian, mulai memonitor data buku
+    fetchBukuData(); 
+    
+    // Selain itu, kita perlu memonitor peminjaman secara real-time juga
+    db.ref(PEMINJAMAN_PATH).on("value", async () => {
+        await fetchPeminjamanStatus(); 
+        filterBooks(); 
+    });
+};
+</script>
+
 </body>
 </html>
