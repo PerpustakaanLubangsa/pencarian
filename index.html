@@ -24,14 +24,31 @@
     --success-green: #2ecc71; 
 }
 
+/* ================================================= */
+/* --- CSS BARU UNTUK MENYEMBUNYIKAN SCROLLBAR --- */
+/* ================================================= */
+
+/* WebKit (Chrome, Safari, Edge modern) */
+::-webkit-scrollbar {
+    display: none; /* Menyembunyikan tampilan bilah */
+    width: 0;     /* Mengatur lebar scrollbar menjadi nol */
+}
+
 /* 1. Latar Belakang Body */
 body { 
+    /* Firefox & IE/Edge Lama */
+    -ms-overflow-style: none;  /* IE dan Edge lama */
+    scrollbar-width: none;  /* Firefox */
+    
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     background: var(--bg-body); /* Background abu-abu muda */
     margin: 0; 
     padding: 20px 15px; 
     color: var(--text-dark); 
 }
+/* ================================================= */
+/* --- AKHIR CSS PENYEMBUNYIAN SCROLLBAR --- */
+/* ================================================= */
 
 /* 2. Container Pembungkus */
 .container {
