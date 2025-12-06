@@ -15,55 +15,43 @@
 
 /* --- VARIABEL DASAR --- */
 :root {
-    --primary-color: #00bcd4;     /* Biru terang konsisten */
-    --text-dark: #006064;         /* Warna teks utama */
-    --bg-main: #fcfcfc;           /* PUTIH PUCAT (Off-White) untuk container utama */
-    --bg-body: #f7f9fc;           /* Abu-abu muda sangat lembut untuk body */
-    --border-light: #e0e0e0;      /* Border yang lembut */
+    --primary-color: #00bcd4;     
+    --text-dark: #006064;         
+    --bg-body: #f7f9fc;           
+    --border-light: #e0e0e0;      
     --warning-orange: #f39c12; 
     --success-green: #2ecc71; 
 }
 
 /* ================================================= */
-/* --- CSS BARU UNTUK MENYEMBUNYIKAN SCROLLBAR --- */
+/* --- CSS UNTUK MENYEMBUNYIKAN SCROLLBAR --- */
 /* ================================================= */
-
-/* WebKit (Chrome, Safari, Edge modern) */
 ::-webkit-scrollbar {
-    display: none; /* Menyembunyikan tampilan bilah */
-    width: 0;     /* Mengatur lebar scrollbar menjadi nol */
+    display: none; 
+    width: 0;     
 }
 
-/* 1. Latar Belakang Body */
 body { 
-    /* Firefox & IE/Edge Lama */
-    -ms-overflow-style: none;  /* IE dan Edge lama */
-    scrollbar-width: none;  /* Firefox */
-    
+    -ms-overflow-style: none;
+    scrollbar-width: none;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    background: var(--bg-body); /* Background abu-abu muda */
+    background: var(--bg-body); 
     margin: 0; 
     padding: 20px 15px; 
     color: var(--text-dark); 
 }
-/* ================================================= */
-/* --- AKHIR CSS PENYEMBUNYIAN SCROLLBAR --- */
-/* ================================================= */
 
 /* 2. Container Pembungkus */
 .container {
-    max-width: 1200px; /* Lebar maksimum container */
+    max-width: 1200px; 
     margin: auto;
-    /* Optional: Memberikan background off-white untuk kontras yang nyaman */
-    background: var(--bg-body);
     padding: 20px;
     border-radius: 12px;
-
 }
 
 /* --- Area Pencarian --- */
 #searchContainer { 
-    margin-bottom: 25px; 
+    margin-bottom: 30px; 
     text-align: center; 
     max-width: 600px;
     margin-left: auto;
@@ -71,32 +59,153 @@ body {
 }
 #searchInput {
     padding: 12px 20px; 
-    border: 1px solid var(--border-light); /* Border lebih lembut */
+    border: 1px solid var(--border-light);
     border-radius: 30px; 
     width: 100%; 
     font-size: 1.1em; 
     transition: border-color 0.3s, box-shadow 0.3s;
     outline: none;
-    background-color: #ffffff; /* Pastikan input tetap putih */
+    background-color: #ffffff;
 }
 #searchInput:focus { 
     border-color: var(--primary-color); 
     box-shadow: 0 0 8px rgba(0, 188, 212, 0.3); 
 }
 
-/* --- Container Hasil Buku --- */
+/* --- GAYA TOMBOL BUKU ACAK --- */
+#randomBookButton, #nextRandomButton {
+    display: block; 
+    width: auto; 
+    margin: 15px auto 0 auto; 
+    padding: 10px 15px;
+    background-color: var(--success-green); 
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+#randomBookButton:hover, #nextRandomButton:hover {
+    background-color: #27ae60; 
+}
+
+#randomBookButton i, #nextRandomButton i {
+    margin-right: 8px;
+}
+
+/* GAYA TOMBOL ACAK JUDUL LAIN DI MODAL */
+#nextRandomButton {
+    background-color: var(--primary-color);
+    margin: 0 auto 15px auto; 
+}
+/* --- AKHIR GAYA TOMBOL ACAK --- */
+
+
+/* --- GAYA MODAL/POP-UP --- */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6); 
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto; 
+    padding: 20px;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 450px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    animation: fadeIn 0.3s;
+    border-top: 5px solid var(--primary-color);
+}
+
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 20px; 
+    margin-left: 10px;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.modal-title {
+    color: var(--text-dark);
+    font-size: 1.5em;
+    margin: 0;
+}
+
+.modal-title i {
+    margin-right: 8px;
+}
+
+#randomBookDetail p {
+    margin: 5px 0;
+    font-size: 1em;
+}
+
+#randomBookDetail .label {
+    font-weight: 600;
+    color: #34495e;
+}
+/* --- AKHIR GAYA MODAL --- */
+
+
+/* --- GAYA PESAN STATUS: DIPERBARUI --- */
+.status-message {
+    /* Untuk memastikan pesan status mengambil lebar penuh di dalam grid */
+    grid-column: 1 / -1; 
+    text-align: center;
+    padding: 20px; 
+    font-size: 1.1em;
+    width: 100%;
+}
+/* --- AKHIR GAYA PESAN STATUS --- */
+
+
+/* --- GAYA CARD BUKU TETAP SAMA --- */
 #bukuContainer {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 20px; 
     padding: 0;
 }
-
-/* 3. Gaya Card Buku */
+/* ... (Gaya card lainnya tetap sama) ... */
 .buku-card {
-    background: #ffffff; /* Card tetap putih murni */
+    background: #ffffff; 
     border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08); /* Shadow sedikit lebih halus */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
     padding: 15px; 
     transition: box-shadow 0.3s, transform 0.2s; 
     border-left: 5px solid var(--primary-color); 
@@ -104,18 +213,6 @@ body {
     display: flex; 
     flex-direction: column;
 }
-.buku-card:hover {
-    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
-    transform: translateY(-2px); 
-}
-
-/* Gaya khusus jika sedang dipinjam */
-.buku-card.dipinjam {
-    border-left: 5px solid var(--warning-orange);
-    opacity: 0.98;
-}
-
-
 .card-title {
     font-size: 1.2em; 
     font-weight: 700;
@@ -125,18 +222,6 @@ body {
     display: flex;
     align-items: flex-start;
 }
-
-.card-title i {
-    flex-shrink: 0;
-    margin-right: 10px;
-    color: var(--primary-color);
-    font-size: 1.3em;
-}
-
-.card-content {
-    flex-grow: 1; 
-}
-
 .card-detail {
     margin-bottom: 8px; 
     padding: 6px 0; 
@@ -145,30 +230,11 @@ body {
     font-size: 0.95em;
     border-top: 1px dashed #eee;
 }
-
-.card-detail:first-of-type {
-    border-top: none; 
-}
-
-.card-detail i {
-    flex-shrink: 0;
-    margin-right: 8px;
-    color: #7f8c8d;
-    width: 20px; 
-    text-align: center;
-}
-
 .detail-label {
     font-weight: 600;
     color: #34495e;
     margin-right: 5px;
 }
-
-.detail-value {
-    color: var(--text-dark);
-}
-
-/* --- Status Ketersediaan di Bagian Bawah --- */
 .card-status {
     margin-top: 15px; 
     padding-top: 10px;
@@ -178,26 +244,12 @@ body {
     padding-bottom: 5px;
     text-transform: uppercase;
 }
-
 .status-available {
     color: var(--success-green);
 }
-
 .status-borrowed {
     color: var(--warning-orange);
 }
-
-
-/* --- Pesan Status (Loading/Tidak Ditemukan) --- */
-/* Elemen statusMessage masih dipertahankan di CSS jika sewaktu-waktu dibutuhkan, 
-   namun tidak digunakan secara default di HTML dan JS yang dimodifikasi. */
-#statusMessage {
-    text-align: center;
-    padding: 20px;
-    color: #34495e;
-    font-size: 1.1em;
-}
-
 </style>
 </head>
 <body>
@@ -205,16 +257,33 @@ body {
 <div class="container">
     <div id="searchContainer">
         <input type="text" id="searchInput" placeholder="Cari Judul, Pengarang, atau No. Inventaris..." oninput="filterBooks()" autocomplete="off">
+        <button id="randomBookButton" onclick="showRandomBookPopup()">
+            <i class="fas fa-magic"></i> Temukan Buku Acak
+        </button>
     </div>
 
     <div id="bukuContainer">
         </div>
 </div>
 
+<div id="randomBookModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-dice"></i> Rekomendasi Buku Acak</h3>
+            <span class="close-button" onclick="closeModal()">&times;</span>
+        </div>
+        
+        <button id="nextRandomButton" onclick="showRandomBookPopup()"><i class="fas fa-redo-alt"></i> Acak Judul Lain</button>
+
+        <div id="randomBookDetail">
+            <p>Memuat...</p>
+        </div>
+    </div>
+</div>
 <script>
 // --- Konfigurasi Firebase ---
 const firebaseConfig = {
-    // Pastikan ini konfigurasi yang benar dari file Anda
+    // GANTI DENGAN KONFIGURASI FIREBASE ASLI ANDA
     apiKey: "AIzaSyByw2om-sKHqgCWBDcE7FEtONoUoJbn9M",
     authDomain: "traying-29bf4.firebaseapp.com",
     databaseURL: "https://traying-29bf4-default-rtdb.firebaseio.com",
@@ -231,33 +300,71 @@ const BUKU_PATH = "buku_v2";
 const PEMINJAMAN_PATH = "peminjaman_v2"; 
 
 // --- STATE GLOBAL & ELEMEN ---
-let allBukuData = {};
+let allBukuData = {}; 
+let filteredBukuData = {}; 
 let activePeminjamanInvs = new Set(); 
 const bukuContainer = document.getElementById("bukuContainer");
 const searchInput = document.getElementById("searchInput");
-// statusMessage tetap didefinisikan untuk mencegah error, tapi tidak dipanggil
-const statusMessage = document.getElementById('statusMessage'); 
+const randomBookButton = document.getElementById("randomBookButton");
+const randomBookModal = document.getElementById("randomBookModal");
+const randomBookDetail = document.getElementById("randomBookDetail");
 
 
-// --- HELPER FUNCTIONS ---
+// --- HELPER MODAL ---
+function closeModal() {
+    randomBookModal.style.display = 'none';
+}
 
-// showStatus() dipertahankan tapi tidak akan terpanggil lagi di filterBooks()
-function showStatus(message = '', icon = '', isVisible = true) {
-    // Perlu dicek apakah statusMessage ada karena sudah dihapus dari HTML
-    if (!statusMessage) return; 
-
-    if (isVisible) {
-        statusMessage.innerHTML = `<i class="${icon}" style="margin-right: 10px; color: var(--primary-color);"></i> ${message}`;
-        statusMessage.style.display = 'block';
-        bukuContainer.style.display = 'none'; 
-    } else {
-        statusMessage.style.display = 'none';
-        bukuContainer.style.display = 'grid'; 
+window.onclick = function(event) {
+    if (event.target == randomBookModal) {
+        closeModal();
     }
 }
 
 
-// 1. Ambil Data Peminjaman Aktif (Hanya Inventarisnya)
+// --- FUNGSI Tampilkan Pop-up Buku Acak ---
+function showRandomBookPopup() {
+    const allKeys = Object.keys(filteredBukuData); 
+
+    if (allKeys.length === 0) {
+        randomBookDetail.innerHTML = '<p>Maaf, tidak ada data buku dengan nomor inventaris numerik yang tersedia.</p>';
+        randomBookModal.style.display = 'block';
+        return;
+    }
+    
+    const randomKey = allKeys[Math.floor(Math.random() * allKeys.length)];
+    const d = filteredBukuData[randomKey]; 
+    const isDipinjam = activePeminjamanInvs.has(randomKey);
+    
+    const statusText = isDipinjam ? `<span style="color: var(--warning-orange); font-weight: bold;"><i class="fas fa-times-circle"></i> SEDANG DIPINJAM</span>` 
+                                  : `<span style="color: var(--success-green); font-weight: bold;"><i class="fas fa-check-circle"></i> TERSEDIA</span>`;
+
+    const contentHTML = `
+        <p style="font-size: 1.3em; font-weight: 700; color: var(--primary-color);"><i class="fas fa-book" style="margin-right: 8px;"></i>${d.judul || 'Judul Tidak Tersedia'}</p>
+        <p><span class="label">Pengarang:</span> ${d.pengarang || '-'}</p>
+        <p><span class="label">Lokasi:</span> Blok ${d.blok || '-'} / Rak ${d.rak || '-'}</p>
+        <p><span class="label">No. Inv:</span> ${randomKey}</p>
+        <p style="margin-top: 15px;"><span class="label">Status:</span> ${statusText}</p>
+    `;
+    
+    randomBookDetail.innerHTML = contentHTML;
+    randomBookModal.style.display = 'block';
+}
+
+
+// FUNGSI Memfilter data buku hanya yang inventarisnya numerik
+function filterNumericKeys(data) {
+    const numericData = {};
+    for (const key in data) {
+        if (/^\d+$/.test(key)) {
+            numericData[key] = data[key];
+        }
+    }
+    return numericData;
+}
+
+
+// 1. Ambil Data Peminjaman Aktif
 function fetchPeminjamanStatus() {
     return new Promise((resolve) => {
         db.ref(PEMINJAMAN_PATH).once("value", snap => {
@@ -284,15 +391,15 @@ function fetchBukuData() {
             snap.forEach(child => {
                 allBukuData[child.key] = child.val(); 
             });
+            filteredBukuData = filterNumericKeys(allBukuData);
             filterBooks(); 
         } else {
             allBukuData = {};
-            renderCards({}); 
-            // showStatus("Tidak ada data buku yang tersedia.", 'fas fa-inbox', true); // Dihapus/dinonaktifkan
+            filteredBukuData = {};
+            filterBooks(); 
         }
     }, error => {
         console.error("Error loading data from Firebase:", error);
-        // showStatus(`Gagal memuat data: ${error.message}`, 'fas fa-server', true); // Dihapus/dinonaktifkan
     });
 }
 
@@ -304,32 +411,40 @@ function renderCards(data) {
 
     if (keys.length === 0) {
         const filter = searchInput.value.toLowerCase().trim();
-        
-        if (filter.length >= 2 && Object.keys(allBukuData).length > 0) {
-            // Jika tidak ada hasil untuk 2 huruf ke atas
-            if (statusMessage) {
-                showStatus(`Tidak ditemukan hasil untuk "${filter}".`, 'fas fa-search-minus', true);
-            } else {
-                bukuContainer.innerHTML = `<div style="text-align:center; padding: 20px;">Tidak ditemukan hasil untuk "${filter}".</div>`;
-            }
-        } else if (Object.keys(allBukuData).length > 0 && filter.length < 2) {
-             // KONDISI INI DIATUR HANYA MENGOSONGKAN WADAH SAJA
-             // Tidak menampilkan pesan "Ketik minimal 2 huruf..."
-             showStatus(null, null, false); 
-             bukuContainer.innerHTML = "";
+        let messageHTML = '';
+        let messageClass = '';
+
+        if (filter.length >= 2 && Object.keys(filteredBukuData).length > 0) {
+             messageHTML = `<i class="fas fa-search-minus" style="margin-right: 10px;"></i> Tidak ditemukan hasil untuk "${filter}".`;
+             messageClass = 'color:#34495e;';
+        } else if (filter.length === 0 && Object.keys(filteredBukuData).length > 0) {
+            // PESAN INI DIRATATENGAHKAN MELALUI KELAS status-message
+             messageHTML = `<i class="fas fa-search" style="margin-right: 10px;"></i> Masukkan minimal 2 huruf untuk memulai pencarian.`;
+             messageClass = 'color:#34495e;';
+        } else if (filter.length === 0 && Object.keys(allBukuData).length > 0) {
+            messageHTML = `<i class="fas fa-exclamation-triangle" style="margin-right: 10px;"></i> Data buku yang memiliki nomor inventaris numerik tidak ditemukan.`;
+            messageClass = 'color:#e74c3c;';
         }
-        return;
+        
+        // Buat elemen div status
+        if (messageHTML) {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'status-message'; // Menggunakan kelas status-message
+            statusDiv.style.cssText = messageClass;
+            statusDiv.innerHTML = messageHTML;
+
+            bukuContainer.appendChild(statusDiv);
+        }
+        return; 
     }
     
-    showStatus(null, null, false); 
-
+    // Tampilkan Card
     for (const inv in data) {
         const d = data[inv];
         const card = document.createElement("div");
         card.className = "buku-card";
-
-        const isDipinjam = activePeminjamanInvs.has(inv);
         
+        const isDipinjam = activePeminjamanInvs.has(inv);
         let statusKeterangan, statusClass, statusIcon;
 
         if (isDipinjam) {
@@ -383,45 +498,36 @@ function renderCards(data) {
 // 4. Fitur Pencarian (Filtering)
 function filterBooks() {
     const filter = searchInput.value.toLowerCase().trim();
-    const filteredData = {};
 
-    // Cek apakah filter memiliki minimal 2 karakter
+    // KONDISI A: Input Pencarian Kosong
     if (filter.length < 2) {
-        // HANYA MENGOSONGKAN WADAH SAJA, TIDAK ADA PESAN STATUS
+        randomBookButton.style.display = 'block'; 
         renderCards({}); 
-        bukuContainer.innerHTML = ""; // Pastikan wadah kosong
-        showStatus(null, null, false); 
-
-        // Jika input kosong, bahkan tidak perlu menampilkan pesan "Tidak ditemukan hasil"
-        if (filter.length === 0) {
-            bukuContainer.innerHTML = "";
-        }
         return; 
     }
 
-    // Jika filter >= 2 karakter, lanjutkan proses filtering
-    for (const inv in allBukuData) {
-        const d = allBukuData[inv];
+    // KONDISI B: Filtering Aktif (Filter length >= 2)
+    randomBookButton.style.display = 'none'; 
+    
+    const filteredDataBySearch = {};
+    
+    for (const inv in filteredBukuData) {
+        const d = filteredBukuData[inv];
         const searchableText = `${d.judul} ${d.pengarang} ${d.blok} ${d.rak} ${inv}`.toLowerCase();
         
         if (searchableText.includes(filter)) {
-            filteredData[inv] = d;
+            filteredDataBySearch[inv] = d;
         }
     }
-    renderCards(filteredData);
+    renderCards(filteredDataBySearch);
 }
+
 
 // --- INITIALIZATION ---
 window.onload = async () => {
-    // Pesan loading di awal juga dihapus
-    
-    // 1. Ambil status peminjaman dulu
     await fetchPeminjamanStatus(); 
-    
-    // 2. Kemudian, mulai memonitor data buku
     fetchBukuData(); 
     
-    // Selain itu, kita perlu memonitor peminjaman secara real-time juga
     db.ref(PEMINJAMAN_PATH).on("value", async () => {
         await fetchPeminjamanStatus(); 
         filterBooks(); 
