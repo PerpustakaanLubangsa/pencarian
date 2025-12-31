@@ -1,224 +1,262 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Katalog Premium - Perpustakaan Lubangsa</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+    <meta charset="UTF-8">
+    <title>Katalog Premium - Perpustakaan Lubangsa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@900&display=swap');
 
-:root {
-    --bg: #05070a;
-    --card-outer: #11141b;
-    --card-inner: #07090d;
-    --gold: #d4af37;
-    --text: #ffffff;
-    --border: #1e293b;
-}
+        :root {
+            --bg: #05070a;
+            --card-outer: #11141b;
+            --card-inner: #07090d;
+            --gold: #d4af37;
+            --text: #ffffff;
+            --border: #1e293b;
+        }
 
-body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding-bottom: 50px;
-}
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
 
-.hero-banner {
-    width: 100%;
-    height: 250px;
-    background: linear-gradient(rgba(5, 7, 10, 0.4), rgba(5, 7, 10, 1)), 
-                url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=2000');
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-bottom: 1px solid var(--border);
-}
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
 
-.hero-banner h1 {
-    font-size: 2.5rem;
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 4px;
-    background: linear-gradient(to right, #fff, var(--gold));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 10px;
+            border: 2px solid var(--bg);
+        }
 
-.hero-banner p {
-    color: var(--gold);
-    font-size: 0.9rem;
-    letter-spacing: 8px;
-    margin-top: 10px;
-}
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gold);
+        }
 
-.container {
-    max-width: 1300px;
-    margin: 0 auto;
-    padding: 0 15px;
-}
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #1e293b var(--bg);
+        }
 
-.search-sticky {
-    max-width: 500px;
-    margin: -30px auto 40px auto;
-    position: sticky;
-    top: 20px;
-    z-index: 1000;
-}
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding-bottom: 50px;
+        }
 
-#searchInput {
-    width: 100%;
-    padding: 15px 50px;
-    background: rgba(17, 20, 27, 0.9);
-    backdrop-filter: blur(15px);
-    border: 1px solid var(--border);
-    border-radius: 50px;
-    color: white;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
+        .hero-banner {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(rgba(5, 7, 10, 0.4), rgba(5, 7, 10, 1)), 
+                        url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&q=80&w=2000');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
 
-.search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--gold); }
+        .hero-banner h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 900; /* Poppins Black */
+            font-size: 3rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(to bottom, #fff 20%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+        }
 
-#bukuGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 15px;
-}
+        .hero-banner p {
+            color: var(--gold);
+            font-size: 0.9rem;
+            letter-spacing: 8px;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
 
-.outer-card {
-    background: var(--card-outer);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px;
-    transition: 0.3s ease;
-}
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
 
-.outer-card:hover { border-color: var(--gold); transform: translateY(-3px); }
+        .search-sticky {
+            max-width: 500px;
+            margin: -30px auto 40px auto;
+            position: sticky;
+            top: 20px;
+            z-index: 1000;
+        }
 
-.inner-box-cover {
-    width: 100%;
-    aspect-ratio: 1 / 1.3;
-    background: var(--card-inner);
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .search-box {
+            position: relative;
+        }
 
-.inner-box-cover i { font-size: 2rem; color: var(--gold); opacity: 0.5; }
+        #searchInput {
+            width: 100%;
+            padding: 15px 50px;
+            background: rgba(17, 20, 27, 0.9);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            outline: none;
+            transition: 0.3s;
+        }
 
-/* Judul Handling */
-.title-area { 
-    margin-top: 8px; 
-    text-align: center; 
-    height: 34px; 
-    overflow: hidden; /* Sembunyikan luapan */
-    position: relative;
-}
+        #searchInput:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+        }
 
-.book-title {
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1.2;
-    margin: 0;
-    white-space: nowrap; /* Mencegah baris baru agar bisa scroll */
-    text-overflow: ellipsis;
-    overflow: hidden;
-    display: block;
-    width: 100%;
-    transition: all 1s ease-in-out;
-}
+        .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--gold); }
 
-/* Animasi Judul saat Hover Kartu */
-.outer-card:hover .book-title {
-    overflow: visible;
-    text-overflow: inherit;
-    animation: marquee 5s linear infinite; /* Gerak jika sangat panjang */
-}
+        #bukuGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+        }
 
-@keyframes marquee {
-    0% { transform: translateX(0); }
-    10% { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
-}
+        .outer-card {
+            background: var(--card-outer);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            transition: 0.3s ease;
+        }
 
-.reveal-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(7, 9, 13, 0.98);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 10px;
-    opacity: 0;
-    transition: 0.3s;
-}
+        .outer-card:hover { border-color: var(--gold); transform: translateY(-3px); }
 
-.inner-box-cover:hover .reveal-overlay { opacity: 1; }
+        .inner-box-cover {
+            width: 100%;
+            aspect-ratio: 1 / 1.3;
+            background: var(--card-inner);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.info-tag { font-size: 0.55rem; color: var(--gold); text-transform: uppercase; font-weight: 700; }
-.info-txt { font-size: 0.7rem; color: #cbd5e1; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .inner-box-cover i { font-size: 2rem; color: var(--gold); opacity: 0.5; }
 
-.status-badge { 
-    padding: 3px; font-size: 0.55rem; font-weight: 800; 
-    text-align: center; border-radius: 3px; text-transform: uppercase; 
-}
-.avail { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.loan { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .title-area { 
+            margin-top: 8px; 
+            text-align: center; 
+            height: 34px; 
+            overflow: hidden;
+            position: relative;
+        }
 
-.pagination-wrapper {
-    margin-top: 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
+        .book-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin: 0;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: block;
+            width: 100%;
+        }
 
-.pagination-bar {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: var(--card-outer);
-    padding: 6px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-}
+        .outer-card:hover .book-title {
+            overflow: visible;
+            text-overflow: inherit;
+            animation: marquee 5s linear infinite;
+        }
 
-.pg-btn {
-    min-width: 35px;
-    height: 35px;
-    border: none;
-    background: transparent;
-    color: var(--text);
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            10% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
 
-.pg-btn:hover:not(:disabled):not(.active) { background: rgba(255,255,255,0.05); color: var(--gold); }
-.pg-btn.active { background: var(--gold); color: #000; }
-.pg-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+        .reveal-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 9, 13, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 10px;
+            opacity: 0;
+            transition: 0.3s;
+        }
 
-.pg-info { font-size: 0.75rem; color: #64748b; }
+        .inner-box-cover:hover .reveal-overlay { opacity: 1; }
 
-@media (max-width: 480px) {
-    #bukuGrid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-    .hero-banner h1 { font-size: 1.5rem; }
-}
-</style>
+        .info-tag { font-size: 0.55rem; color: var(--gold); text-transform: uppercase; font-weight: 700; }
+        .info-txt { font-size: 0.7rem; color: #cbd5e1; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .status-badge { 
+            padding: 3px; font-size: 0.55rem; font-weight: 800; 
+            text-align: center; border-radius: 3px; text-transform: uppercase; 
+        }
+        .avail { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .loan { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        .pagination-wrapper {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pagination-bar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--card-outer);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .pg-btn {
+            min-width: 35px;
+            height: 35px;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pg-btn:hover:not(:disabled):not(.active) { background: rgba(255,255,255,0.05); color: var(--gold); }
+        .pg-btn.active { background: var(--gold); color: #000; }
+        .pg-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        .pg-info { font-size: 0.75rem; color: #64748b; }
+
+        @media (max-width: 480px) {
+            #bukuGrid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+            .hero-banner h1 { font-size: 1.8rem; }
+        }
+    </style>
 </head>
 <body>
 
